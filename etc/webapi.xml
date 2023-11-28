@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/abeta/login" method="POST">
+        <service class="Abeta\PunchOut\Api\Webapi\LoginInterface" method="create"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/abeta/cart" method="GET">
+        <service class="Abeta\PunchOut\Api\Webapi\CartInterface" method="export"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+    <route url="/V1/abeta/checkout" method="GET">
+        <service class="Abeta\PunchOut\Api\Webapi\CheckoutInterface" method="process"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+</routes>
+

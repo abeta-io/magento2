@@ -1,0 +1,60 @@
+//
+//  Header
+//  ---------------------------------------------
+
+form[action*="abeta_punch_out"] {
+    .abeta-punchout-variables();
+
+    .mm-ui-header {
+        display: grid;
+        align-items: center;
+        gap: 44px;
+        margin-bottom: 25px;
+        padding: 12rem 2.5rem 2.5rem 2.5rem;
+
+        border-radius: 24px;
+        background: ~'#e2e7fb no-repeat 2rem 15% / 20rem';
+
+        font-size: 1.4rem;
+        text-align: left;
+    }
+
+    .mm-ui-header-text {
+        display: grid;
+        grid-gap: 4px;
+        margin-top: 4px;
+        line-height: 2.5rem;
+
+        strong {
+            margin-bottom: 2px;
+            font-size: 1.5rem;
+        }
+    }
+
+    .mm-ui-header-actions {
+        display: flex;
+        gap: 16px;
+    }
+}
+
+@media screen and (min-width: 1280px) {
+    form[action*="abeta_punch_out"] {
+        .mm-ui-header {
+            gap: 25px;
+            padding: 1.8rem 1.8rem 1.8rem 25rem;
+            background: ~'#e2e7fb no-repeat 2rem 50% / 20rem';
+        }
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    form[action*="abeta_punch_out"] {
+        .mm-ui-header {
+            grid-template-columns: 1fr auto;
+        }
+
+        .mm-ui-header-actions {
+            display: grid;
+        }
+    }
+}

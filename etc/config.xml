@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <abeta_punch_out>
+            <general>
+                <version>v1.0.0</version>
+                <api_version>1.0</api_version>
+                <enable>0</enable>
+            </general>
+            <settings>
+                <button_label>PunchOut</button_label>
+            </settings>
+            <debug>
+                <enabled>0</enabled>
+            </debug>
+        </abeta_punch_out>
+    </default>
+</config>

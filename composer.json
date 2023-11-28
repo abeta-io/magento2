@@ -1,0 +1,23 @@
+{
+    "name": "abeta-io/magento2",
+    "description": "Abeta extension for Magento 2",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "Commercial"
+    ],
+    "require": {
+        "magento/framework": ">=100.1.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Abeta\\PunchOut\\": ""
+        }
+    }
+}

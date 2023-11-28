@@ -1,0 +1,48 @@
+/**
+  * Copyright © Magmodules.eu. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+
+& when (@media-common = true) {
+    .punch-out-button-wrapper {
+        .action.primary {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            border: 0;
+            border-radius: 8px;
+            background-color: fade(@color-blue1, 80%);
+            font-size: 1.6rem;
+            transition: .3s;
+
+            &:hover {
+                background-color: @color-blue1;
+            }
+        }
+    }
+
+    #punch-out-button-modal {
+        table {
+            border-collapse: separate;
+            border-spacing: 8px 0;
+        }
+
+        thead {
+            font-size: 16px;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: @color-gray94;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    }
+
+    .abeta-modal {
+        .modal-inner-wrap {
+            max-width: 768px;
+        }
+    }
+}

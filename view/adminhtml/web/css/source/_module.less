@@ -1,0 +1,33 @@
+//
+//  Imports
+//  ---------------------------------------------
+
+@import './variables/_colors.less';
+@import './module/ui/_button.less';
+@import './module/ui/_modal.less';
+
+@import './module/_header.less';
+@import './module/_version.less';
+@import './module/_debug.less';
+
+
+//
+//  Common styles
+//  ---------------------------------------------
+
+.admin__page-nav._collapsed.abeta-extensions .title:before {
+    display: none;
+}
+
+.admin__page-nav._collapsed.abeta-extensions .title,
+.admin__page-nav._collapsed._show.abeta-extensions .title  {
+    background-image: url('@{baseDir}Abeta_PunchOut/images/logo.svg') !important;
+    background-position: 15px center;
+    background-repeat: no-repeat;
+    text-indent: 50px;
+    background-size: auto 70%;
+}
+
+#row_abeta_punch_out_debug_error_button .value {
+    padding-top: 8px;
+}

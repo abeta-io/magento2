@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="abeta_punch_out" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>PunchOut</label>
+            <tab>service</tab>
+            <resource>Abeta_PunchOut::config</resource>
+            <include path="Abeta_PunchOut::system/branding.xml"/>
+            <include path="Abeta_PunchOut::system/general.xml"/>
+            <include path="Abeta_PunchOut::system/settings.xml"/>
+            <include path="Abeta_PunchOut::system/debug.xml"/>
+        </section>
+    </system>
+</config>

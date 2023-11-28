@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="settings" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>Settings</label>
+        <field id="label" translate="label" type="text" sortOrder="1" showInDefault="1" showInStore="1" showInWebsite="1">
+            <label>Return Button Label</label>
+            <config_path>abeta_punch_out/settings/button_label</config_path>
+        </field>
+        <field id="shipping_method" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Default Shipping Method</label>
+            <source_model>Abeta\PunchOut\Model\Config\Source\ShippingMethods</source_model>
+            <config_path>abeta_punch_out/settings/shipping_method</config_path>
+        </field>
+    </group>
+</include>

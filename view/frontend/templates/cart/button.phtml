@@ -1,0 +1,38 @@
+<?php
+/* @var \Abeta\PunchOut\Block\Cart\Button $block */
+$buttonText = $block->getButtonLabel();
+?>
+
+<?php if ($block->isNeedToShow()): ?>
+    <div class="punch-out-button-wrapper"
+         data-mage-init='{
+             "Abeta_PunchOut/js/abeta-modal": {
+                 "buttonLabel": "<?= $block->escapeHtml($buttonText); ?>"
+              }
+         }'>
+        <button class="action primary punch-out"
+                id="punch-out-button"
+                type="button"
+                title="<?= $block->escapeHTML($buttonText); ?>">
+            <?= $block->escapeHTML($buttonText); ?>
+        </button>
+
+        <div id="punch-out-button-modal" hidden>
+            <div class="message hidden" id="punch-out-popup-message"><div></div></div>
+
+            <table id="punch-out-table">
+                <thead>
+                    <tr>
+                        <th><?= $block->escapeHtml(__('Product name')) ?></th>
+                        <th width="120px"><?= $block->escapeHtml(__('Qty')) ?></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <style>
+        [data-role="proceed-to-checkout"] { display: none !important; }
+    </style>
+<?php endif; ?>
