@@ -39,7 +39,7 @@ class ErrorLogger extends Logger
      * @param string $type
      * @param mixed $data
      */
-    public function addLog(string $type, mixed $data): void
+    public function addLog(string $type, $data): void
     {
         if (is_array($data) || is_object($data)) {
             $data['remote_address'] = $this->remoteAddress->getRemoteAddress();

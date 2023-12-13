@@ -99,10 +99,17 @@ class CreateToken
     public function execute(array $postData): array
     {
         $this->validatePostData($postData);
+        $customer = $this->getCustomer();
 
-        $token = $this->createLoginToken(
-            $this->getCustomer()
-        );
+        if (!$customer->getDefaultBilling()) {
+            throw new LocalizedException(__('Customer default billing address is not set.'));
+        }
+
+        if (!$customer->getDefaultShipping()) {
+            throw new LocalizedException(__('Customer default shipping address is not set.'));
+        }
+
+        $token = $this->createLoginToken($customer);
 
         return ['success' => true, 'one_time_url' => $this->buildLoginUrl($token)];
     }
