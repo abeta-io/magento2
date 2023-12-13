@@ -53,7 +53,7 @@ class DebugLogger extends Logger
      * @param string $type
      * @param mixed $data
      */
-    public function addLog(string $type, mixed $data): void
+    public function addLog(string $type, $data): void
     {
         if (!$this->configProvider->isDebugMode()) {
             return;
