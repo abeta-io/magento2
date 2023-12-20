@@ -107,4 +107,12 @@ class Repository implements ConfigRepositoryInterface
     {
         return $this->getStoreValue(self::XML_PATH_SHIPPING_METHOD);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function useModal(int $storeId = null): bool
+    {
+        return $this->isSetFlag(self::XML_PATH_USE_MODAL, $storeId);
+    }
 }

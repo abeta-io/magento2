@@ -9,6 +9,7 @@
             </general>
             <settings>
                 <button_label>PunchOut</button_label>
+                <use_modal>1</use_modal>
             </settings>
             <debug>
                 <enabled>0</enabled>

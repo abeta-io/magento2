@@ -43,7 +43,7 @@ class Process
 
     /**
      * @param Quote $cart
-     * @return array[]
+     * @return array
      * @throws LocalizedException
      */
     public function execute(Quote $cart): array
@@ -56,11 +56,9 @@ class Process
         $this->quoteRepository->save($cart);
 
         return [
-            [
-                'success' => true,
-                'message' => 'Successfully transferred cart to Abeta',
-                'redirect_url' => $redirectUrl
-            ]
+            'success' => true,
+            'message' => 'Successfully transferred cart to Abeta',
+            'redirect_url' => $redirectUrl
         ];
     }
 }

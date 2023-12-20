@@ -16,6 +16,7 @@ interface RepositoryInterface
     public const XML_PATH_API_VERSION = 'abeta_punch_out/general/api_version';
     public const XML_PATH_BUTTON_LABEL = 'abeta_punch_out/settings/button_label';
     public const XML_PATH_SHIPPING_METHOD = 'abeta_punch_out/settings/shipping_method';
+    public const XML_PATH_USE_MODAL = 'abeta_punch_out/settings/use_modal';
     public const XML_PATH_DEBUG = 'abeta_punch_out/debug/enabled';
 
     /**
@@ -61,6 +62,15 @@ interface RepositoryInterface
      * @return string|null
      */
     public function getShippingMethod(): ?string;
+
+    /**
+     * Check if we need to show modal
+     *
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    public function useModal(int $storeId = null): bool;
 
     /**
      * Check if debug mode is enabled
