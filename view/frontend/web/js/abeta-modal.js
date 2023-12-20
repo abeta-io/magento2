@@ -87,14 +87,14 @@ define([
                     AbetaModal.html.message.parent().addClass('error').removeClass('hidden');
                 }
 
-                if (data[0][0]?.success) {
+                if (data[0]?.success) {
                     AbetaModal.isCheckoutSuccess = true;
-                    AbetaModal.html.message.html(data[0][0].message);
+                    AbetaModal.html.message.html(data[0].message);
                     AbetaModal.html.message.parent().addClass('success').removeClass('hidden');
                     AbetaModal.html.table.hide();
                     $('.abeta-process').hide();
 
-                    AbetaModal.request.redirect = data[0][0]['redirect_url'];
+                    AbetaModal.request.redirect = data[0]['redirect_url'];
                     customerData.invalidate(['cart']);
                     customerData.reload(['cart'], true);
 

@@ -4,34 +4,40 @@ $buttonText = $block->getButtonLabel();
 ?>
 
 <?php if ($block->isNeedToShow()): ?>
-    <div class="punch-out-button-wrapper"
-         data-mage-init='{
+    <?php if ($block->useModal()): ?>
+        <div class="punch-out-button-wrapper"
+             data-mage-init='{
              "Abeta_PunchOut/js/abeta-modal": {
                  "buttonLabel": "<?= $block->escapeHtml($buttonText); ?>"
               }
          }'>
-        <button class="action primary punch-out"
-                id="punch-out-button"
-                type="button"
-                title="<?= $block->escapeHTML($buttonText); ?>">
-            <?= $block->escapeHTML($buttonText); ?>
-        </button>
+            <button class="action primary punch-out"
+                    id="punch-out-button"
+                    type="button"
+                    title="<?= $block->escapeHTML($buttonText); ?>">
+                <?= $block->escapeHTML($buttonText); ?>
+            </button>
 
-        <div id="punch-out-button-modal" hidden>
-            <div class="message hidden" id="punch-out-popup-message"><div></div></div>
-
-            <table id="punch-out-table">
-                <thead>
+            <div id="punch-out-button-modal" hidden>
+                <div class="message hidden" id="punch-out-popup-message"><div></div></div>
+                <table id="punch-out-table">
+                    <thead>
                     <tr>
                         <th><?= $block->escapeHtml(__('Product name')) ?></th>
                         <th width="120px"><?= $block->escapeHtml(__('Qty')) ?></th>
                     </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-    </div>
-
+    <?php else: ?>
+        <div class="punch-out-button-wrapper">
+            <a href="<?= $block->escapeUrl($block->getPunchOutUrl()); ?>" class="action primary punch-out">
+                <?= $block->escapeHTML($buttonText); ?>
+            </a>
+        </div>
+    <?php endif; ?>
     <style>
         [data-role="proceed-to-checkout"] { display: none !important; }
     </style>

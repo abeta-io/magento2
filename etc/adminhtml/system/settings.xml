@@ -11,5 +11,10 @@
             <source_model>Abeta\PunchOut\Model\Config\Source\ShippingMethods</source_model>
             <config_path>abeta_punch_out/settings/shipping_method</config_path>
         </field>
+        <field id="use_modal" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Use Modal</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>abeta_punch_out/settings/use_modal</config_path>
+        </field>
     </group>
 </include>

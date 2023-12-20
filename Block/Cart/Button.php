@@ -2,10 +2,11 @@
 
 namespace Abeta\PunchOut\Block\Cart;
 
+use Abeta\PunchOut\Api\Config\RepositoryInterface as ConfigProvider;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
-use Abeta\PunchOut\Api\Config\RepositoryInterface as ConfigProvider;
 
 class Button extends Template
 {
@@ -17,6 +18,10 @@ class Button extends Template
      * @var CheckoutSession
      */
     private $checkoutSession;
+    /**
+     * @var UrlInterface
+     */
+    private $urlBuilder;
 
     public function __construct(
         Context $context,
@@ -26,6 +31,7 @@ class Button extends Template
     ) {
         $this->configProvider = $configProvider;
         $this->checkoutSession = $checkoutSession;
+        $this->urlBuilder = $context->getUrlBuilder();
         parent::__construct($context, $data);
     }
 
@@ -44,5 +50,21 @@ class Button extends Template
     {
         return $this->configProvider->isEnabled()
             && $this->checkoutSession->getAbetaSessionId();
+    }
+
+    /**
+     * @return bool
+     */
+    public function useModal(): bool
+    {
+        return $this->configProvider->useModal();
+    }
+
+    /**
+     * @return string
+     */
+    public function getPunchOutUrl(): string
+    {
+        return $this->urlBuilder->getUrl('abeta/punchOut');
     }
 }
