@@ -258,9 +258,13 @@ class Export
      * @param Quote\Item $cartItem
      * @return array
      */
-    public function getCategoriesName(Quote\Item $cartItem)
+    public function getCategoriesName(Quote\Item $cartItem): array
     {
         $categoryIds = $cartItem->getProduct()->getCategoryIds();
+        if (empty($categoryIds)) {
+            return [];
+        }
+
         $categories = $this->categoryCollectionFactory->create()
             ->addAttributeToSelect('*')
             ->addAttributeToFilter('entity_id', $categoryIds);
