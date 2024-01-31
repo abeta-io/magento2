@@ -9,6 +9,7 @@ use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\Quote\Item as QuoteItem;
 use Magento\Quote\Model\Quote\Address\Rate;
 use Magento\Quote\Model\QuoteRepository;
 use Magento\Customer\Api\AddressRepositoryInterface;
@@ -183,10 +184,21 @@ class Export
     private function getProductData(Quote $cart): array
     {
         $products = [];
-        foreach ($cart->getAllVisibleItems() as $cartItem) {
-            $products[] = [
+        $simples = [];
+
+        /** @var QuoteItem $cartItem */
+        foreach ($cart->getAllItems() as $cartItem) {
+
+            if ($cartItem->getParentItemId()) {
+                $simples[$cartItem->getParentItemId()][] = $this->getSimpleArray($cartItem);
+                continue;
+            }
+
+            $products[$cartItem->getItemId()] = [
                 'standard' => [
                     'type' => 'product',
+                    'product_type' => $cartItem->getProductType(),
+                    'item_id' => $cartItem->getItemId(),
                     'sku' => $cartItem->getSku(),
                     'title' => $cartItem->getName(),
                     'qty' => $cartItem->getQty(),
@@ -195,7 +207,8 @@ class Export
                     'vat_percentage' => $cartItem->getTaxPercent(),
                     'line_total_ex_vat' => $this->getProductExclTax($cartItem) * $cartItem->getQty(),
                     'original_price_ex_vat' => $cartItem->getPrice(),
-                    'image_url' => $this->getProductImageData($cartItem)
+                    'image_url' => $this->getProductImageData($cartItem),
+                    'children' => [],
                 ],
                 'cart_item' => $cartItem->getData(),
                 'product_data' => $this->getProductDataArray($cartItem),
@@ -203,9 +216,29 @@ class Export
             ];
         }
 
+        foreach ($simples as $itemId => $data) {
+            $products[$itemId]['standard']['children'] = $data;
+        }
+
         $products[] = $this->getShippingData($cart);
 
         return $products;
+    }
+
+    /**
+     * @param QuoteItem $cartItem
+     * @return array
+     */
+    private function getSimpleArray(QuoteItem $cartItem): array
+    {
+        return [
+            'type' => 'product',
+            'product_type' => $cartItem->getProductType(),
+            'item_id' => $cartItem->getItemId(),
+            'sku' => $cartItem->getSku(),
+            'title' => $cartItem->getName(),
+            'qty' => $cartItem->getQty(),
+        ];
     }
 
     /**
