@@ -115,4 +115,15 @@ class Repository implements ConfigRepositoryInterface
     {
         return $this->isSetFlag(self::XML_PATH_USE_MODAL, $storeId);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getStoreInformation(int $storeId = null): array
+    {
+        return [
+            'country_id' => $this->getStoreValue(self::XML_PATH_STORE_COUNTRY_ID, $storeId),
+            'postcode' => $this->getStoreValue(self::XML_PATH_STORE_POSTCODE, $storeId),
+        ];
+    }
 }

@@ -4,16 +4,19 @@ namespace Abeta\PunchOut\Service\Cart;
 
 use Abeta\PunchOut\Api\Config\RepositoryInterface as ConfigProvider;
 use Abeta\PunchOut\Api\Log\RepositoryInterface as LogRepository;
+use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product\Media\Config as CatalogProductMediaConfig;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Api\AddressRepositoryInterface;
+use Magento\Customer\Api\Data\AddressInterface;
+use Magento\Customer\Model\Data\AddressFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Item as QuoteItem;
 use Magento\Quote\Model\Quote\Address\Rate;
 use Magento\Quote\Model\QuoteRepository;
-use Magento\Customer\Api\AddressRepositoryInterface;
-use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Export Cart API Service Class
@@ -54,8 +57,17 @@ class Export
      * @var ProductRepositoryInterface
      */
     private $productRepository;
+    /**
+     * @var AddressFactory
+     */
+    private $addressFactory;
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
 
     /**
+     * Export constructor.
      * @param CheckoutSession $checkoutSession
      * @param Rate $shippingRates
      * @param QuoteRepository $quoteRepository
@@ -65,6 +77,8 @@ class Export
      * @param ConfigProvider $configProvider
      * @param LogRepository $logRepository
      * @param AddressRepositoryInterface $addressRepository
+     * @param AddressFactory $addressFactory
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         CheckoutSession $checkoutSession,
@@ -75,7 +89,9 @@ class Export
         CollectionFactory $categoryCollectionFactory,
         ConfigProvider $configProvider,
         LogRepository $logRepository,
-        AddressRepositoryInterface $addressRepository
+        AddressRepositoryInterface $addressRepository,
+        AddressFactory $addressFactory,
+        StoreManagerInterface $storeManager
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->quoteRepository = $quoteRepository;
@@ -86,6 +102,8 @@ class Export
         $this->categoryCollectionFactory = $categoryCollectionFactory;
         $this->logRepository = $logRepository;
         $this->addressRepository = $addressRepository;
+        $this->addressFactory = $addressFactory;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -119,9 +137,7 @@ class Export
 
                 $shippingAddress = $cart->getShippingAddress();
                 if (!$shippingAddress->getCountryId()) {
-                    $shippingAddress->importCustomerAddressData(
-                        $this->addressRepository->getById($cart->getCustomer()->getDefaultShipping())
-                    );
+                    $shippingAddress->importCustomerAddressData($this->getShippingAddress($cart));
                 }
                 $shippingAddress->setCollectShippingRates(true)
                     ->collectShippingRates()
@@ -135,6 +151,34 @@ class Export
             throw new LocalizedException(
                 __('Unable to add shipping method to the cart: %1', $exception->getMessage())
             );
+        }
+    }
+
+    /**
+     * @param Quote $cart
+     * @return AddressInterface
+     * @throws LocalizedException
+     */
+    private function getShippingAddress(Quote $cart): AddressInterface
+    {
+        try {
+            return $this->addressRepository->getById($cart->getCustomer()->getDefaultShipping());
+        } catch (\Exception $e) {
+            /** @var AddressInterface $address */
+            $address = $this->addressFactory->create();
+            $storeInformation = $this->configProvider->getStoreInformation(
+                (int)$this->storeManager->getStore()->getId()
+            );
+
+            if ($storeInformation['country_id']) {
+                $address->setCountryId($storeInformation['country_id']);
+            }
+
+            if ($storeInformation['postcode']) {
+                $address->setPostcode($storeInformation['postcode']);
+            }
+
+            return $address;
         }
     }
 
@@ -243,19 +287,6 @@ class Export
 
     /**
      * @param Quote\Item $cartItem
-     * @return array
-     */
-    private function getProductDataArray(Quote\Item $cartItem): array
-    {
-        try {
-            return $this->productRepository->getById($cartItem->getProduct()->getId())->getData();
-        } catch (\Exception $exception) {
-            return $cartItem->getProduct()->getData();
-        }
-    }
-
-    /**
-     * @param Quote\Item $cartItem
      * @return float
      */
     private function getProductInclTax(Quote\Item $cartItem): float
@@ -285,6 +316,19 @@ class Export
         }
 
         return '';
+    }
+
+    /**
+     * @param Quote\Item $cartItem
+     * @return array
+     */
+    private function getProductDataArray(Quote\Item $cartItem): array
+    {
+        try {
+            return $this->productRepository->getById($cartItem->getProduct()->getId())->getData();
+        } catch (\Exception $exception) {
+            return $cartItem->getProduct()->getData();
+        }
     }
 
     /**

@@ -19,6 +19,9 @@ interface RepositoryInterface
     public const XML_PATH_USE_MODAL = 'abeta_punch_out/settings/use_modal';
     public const XML_PATH_DEBUG = 'abeta_punch_out/debug/enabled';
 
+    public const XML_PATH_STORE_COUNTRY_ID = 'general/store_information/country_id';
+    public const XML_PATH_STORE_POSTCODE = 'general/store_information/postcode';
+
     /**
      * Get extension version
      *
@@ -80,4 +83,13 @@ interface RepositoryInterface
      * @return bool
      */
     public function isDebugMode(int $storeId = null): bool;
+
+    /**
+     * Get store information
+     *
+     * @param int|null $storeId
+     *
+     * @return array
+     */
+    public function getStoreInformation(int $storeId = null): array;
 }
