@@ -54,11 +54,21 @@ class Index extends Action
         try {
             $quote = $this->checkoutSession->getQuote();
             $result = $this->processCheckout->execute($quote);
+            $this->resetSessionData();
         } catch (\Exception $exception) {
             $this->messageManager->addErrorMessage($exception->getMessage());
             return $resultRedirect->setPath($this->redirect->getRefererUrl());
         }
 
         return $resultRedirect->setUrl($result['redirect_url']);
+    }
+
+    /**
+     * @return void
+     */
+    private function resetSessionData()
+    {
+        $this->checkoutSession->unsAbetaSessionId();
+        $this->checkoutSession->unsAbetaReturnUrl();
     }
 }

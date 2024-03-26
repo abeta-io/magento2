@@ -1,0 +1,16 @@
+{
+    "abeta_login_token": {
+        "column": {
+            "entity_id": true,
+            "token": true,
+            "return_url": true,
+            "session_id": true,
+            "customer_id": true,
+            "store_id": true,
+            "created_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}
