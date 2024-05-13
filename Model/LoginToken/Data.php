@@ -94,6 +94,38 @@ class Data extends AbstractModel implements ExtensibleDataInterface, DataInterfa
     /**
      * @inheritDoc
      */
+    public function getEmptyCartOnLogin(): bool
+    {
+        return (bool)$this->getData(self::EMPTY_CART_ON_LOGIN);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setEmptyCartOnLogin(bool $bool): DataInterface
+    {
+        return $this->setData(self::EMPTY_CART_ON_LOGIN, $bool);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getLogoutOnPunchout(): bool
+    {
+        return (bool)$this->getData(self::LOGOUT_ON_PUNCHOUT);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setLogoutOnPunchout(bool $bool): DataInterface
+    {
+        return $this->setData(self::LOGOUT_ON_PUNCHOUT, $bool);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getReturnUrl(): string
     {
         return $this->getData(self::RETURN_URL);

@@ -8,6 +8,8 @@
         <column name="session_id" xsi:type="varchar" length="255" comment="Session ID"/>
         <column name="customer_id" xsi:type="int" padding="10" identity="false" nullable="true" comment="Customer ID"/>
         <column name="store_id" xsi:type="smallint" padding="5" unsigned="true" nullable="false" identity="false" comment="Store ID"/>
+        <column name="empty_cart_on_login" xsi:type="smallint" nullable="false" default="1" comment="Empty Cart on Login"/>
+        <column name="logout_on_punchout" xsi:type="smallint" nullable="false" default="0" comment="Logout on Punchout"/>
         <column name="created_at" xsi:type="timestamp" on_update="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
         <constraint referenceId="PRIMARY" xsi:type="primary">
             <column name="entity_id"/>

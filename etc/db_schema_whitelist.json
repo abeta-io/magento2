@@ -7,7 +7,9 @@
             "session_id": true,
             "customer_id": true,
             "store_id": true,
-            "created_at": true
+            "created_at": true,
+            "empty_cart_on_login": true,
+            "logout_on_punchout": true
         },
         "constraint": {
             "PRIMARY": true

@@ -17,6 +17,8 @@ interface DataInterface extends ExtensibleDataInterface
     public const CUSTOMER_ID = 'customer_id';
     public const SESSION_ID = 'session_id';
     public const STORE_ID = 'store_id';
+    public const EMPTY_CART_ON_LOGIN = 'empty_cart_on_login';
+    public const LOGOUT_ON_PUNCHOUT = 'logout_on_punchout';
     public const RETURN_URL = 'return_url';
     public const CREATED_AT = 'created_at';
 
@@ -63,6 +65,28 @@ interface DataInterface extends ExtensibleDataInterface
      * @return DataInterface
      */
     public function setStoreId(int $storeId): self;
+
+    /**
+     * @return bool
+     */
+    public function getEmptyCartOnLogin(): bool;
+
+    /**
+     * @param bool $bool
+     * @return DataInterface
+     */
+    public function setEmptyCartOnLogin(bool $bool): self;
+
+    /**
+     * @return bool
+     */
+    public function getLogoutOnPunchout(): bool;
+
+    /**
+     * @param bool $bool
+     * @return DataInterface
+     */
+    public function setLogoutOnPunchout(bool $bool): self;
 
     /**
      * @return string
