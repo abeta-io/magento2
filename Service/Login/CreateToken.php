@@ -126,6 +126,10 @@ class CreateToken
         if ($this->loginData['api_key'] != $this->configProvider->getApiKey()) {
             throw new LocalizedException(__('Invalid API-key'));
         }
+
+        foreach (['empty_cart_on_login', 'logout_on_punchout'] as $key) {
+            $this->loginData[$key] = !isset($this->loginData[$key]) || (bool)$this->loginData[$key];
+        }
     }
 
     /**
@@ -140,7 +144,9 @@ class CreateToken
             ->setToken($this->mathRandom->getUniqueHash('AB'))
             ->setSessionId($this->loginData['session_id'])
             ->setStoreId((int)$this->loginData['store_id'])
-            ->setReturnUrl($this->loginData['return_url']);
+            ->setReturnUrl($this->loginData['return_url'])
+            ->setEmptyCartOnLogin($this->loginData['empty_cart_on_login'])
+            ->setLogoutOnPunchout($this->loginData['logout_on_punchout']);
 
         return $this->tokenRepository->save($loginToken)->getToken();
     }

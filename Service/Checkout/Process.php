@@ -5,6 +5,7 @@ namespace Abeta\PunchOut\Service\Checkout;
 use Abeta\PunchOut\Service\Api\Adapter;
 use Abeta\PunchOut\Service\Cart\Export as ExportCart;
 use Magento\Checkout\Model\Session as CheckoutSession;
+use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
@@ -28,15 +29,21 @@ class Process
      * @var CheckoutSession
      */
     private $checkoutSession;
-
+    /**
+     * @var CustomerSession
+     */
+    private $customerSession;
+    
     public function __construct(
         ExportCart $exportCart,
         Adapter $adapter,
         CheckoutSession $checkoutSession,
+        CustomerSession $customerSession,
         CartRepositoryInterface $quoteRepository
     ) {
         $this->exportCart = $exportCart;
         $this->checkoutSession = $checkoutSession;
+        $this->customerSession = $customerSession;
         $this->adapter = $adapter;
         $this->quoteRepository = $quoteRepository;
     }
@@ -54,11 +61,25 @@ class Process
         $redirectUrl = $this->checkoutSession->getAbetaReturnUrl();
         $cart->setIsActive(false);
         $this->quoteRepository->save($cart);
+        $this->resetSessionData();
 
         return [
             'success' => true,
             'message' => 'Successfully transferred cart to Abeta',
             'redirect_url' => $redirectUrl
         ];
+    }
+
+    /**
+     * @return void
+     */
+    private function resetSessionData()
+    {
+        if ($this->checkoutSession->getAbetaLogout()) {
+            $this->customerSession->destroy();
+        }
+        $this->checkoutSession->unsAbetaSessionId();
+        $this->checkoutSession->unsAbetaReturnUrl();
+        $this->checkoutSession->unsAbetaLogout();
     }
 }

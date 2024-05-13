@@ -2,6 +2,7 @@
 
 namespace Abeta\PunchOut\Service\Login;
 
+use Abeta\PunchOut\Api\LoginToken\DataInterface as TokenData;
 use Abeta\PunchOut\Api\LoginToken\RepositoryInterface as TokenRepository;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session;
@@ -59,12 +60,24 @@ class LoginCustomer
         $tokenData = $this->tokenRepository->getByToken($token, true);
         $customer = $this->customerRepository->getById($tokenData->getCustomerId());
         $this->session->setCustomerDataAsLoggedIn($customer);
+        $this->setSessionData($tokenData);
 
-        $this->cleanQuote();
-        $this->checkoutSession->setAbetaReturnUrl($tokenData->getReturnUrl());
-        $this->checkoutSession->setAbetaSessionId($tokenData->getSessionId());
+        if ($tokenData->getEmptyCartOnLogin()) {
+            $this->cleanQuote();
+        }
 
         return true;
+    }
+
+    /**
+     * @param TokenData $tokenData
+     * @return void
+     */
+    private function setSessionData(TokenData $tokenData): void
+    {
+        $this->checkoutSession->setAbetaReturnUrl($tokenData->getReturnUrl());
+        $this->checkoutSession->setAbetaSessionId($tokenData->getSessionId());
+        $this->checkoutSession->setAbetaLogout($tokenData->getLogoutOnPunchout());
     }
 
     /**
