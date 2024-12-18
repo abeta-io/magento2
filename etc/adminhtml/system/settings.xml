@@ -16,5 +16,9 @@
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>abeta_punch_out/settings/use_modal</config_path>
         </field>
+        <field id="custom_css" translate="label" type="textarea" sortOrder="4" showInDefault="1" showInStore="1" showInWebsite="1">
+            <label>Custom Css</label>
+            <config_path>abeta_punch_out/settings/custom_css</config_path>
+        </field>
     </group>
 </include>

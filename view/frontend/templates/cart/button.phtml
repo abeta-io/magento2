@@ -1,5 +1,10 @@
 <?php
-/* @var \Abeta\PunchOut\Block\Cart\Button $block */
+/** @var Button $block */
+/** @var Escaper $escaper */
+
+use Abeta\PunchOut\Block\Cart\Button;
+use Magento\Framework\Escaper;
+
 $buttonText = $block->getButtonLabel();
 ?>
 
@@ -8,14 +13,14 @@ $buttonText = $block->getButtonLabel();
         <div class="punch-out-button-wrapper"
              data-mage-init='{
              "Abeta_PunchOut/js/abeta-modal": {
-                 "buttonLabel": "<?= $block->escapeHtml($buttonText); ?>"
+                 "buttonLabel": "<?= $escaper->escapeHtml($buttonText); ?>"
               }
          }'>
             <button class="action primary punch-out"
                     id="punch-out-button"
                     type="button"
-                    title="<?= $block->escapeHTML($buttonText); ?>">
-                <?= $block->escapeHTML($buttonText); ?>
+                    title="<?= $escaper->escapeHTML($buttonText); ?>">
+                <?= $escaper->escapeHTML($buttonText); ?>
             </button>
 
             <div id="punch-out-button-modal" hidden>
@@ -23,8 +28,8 @@ $buttonText = $block->getButtonLabel();
                 <table id="punch-out-table">
                     <thead>
                     <tr>
-                        <th><?= $block->escapeHtml(__('Product name')) ?></th>
-                        <th width="120px"><?= $block->escapeHtml(__('Qty')) ?></th>
+                        <th><?= $escaper->escapeHtml(__('Product name')) ?></th>
+                        <th width="120px"><?= $escaper->escapeHtml(__('Qty')) ?></th>
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -33,12 +38,17 @@ $buttonText = $block->getButtonLabel();
         </div>
     <?php else: ?>
         <div class="punch-out-button-wrapper">
-            <a href="<?= $block->escapeUrl($block->getPunchOutUrl()); ?>" class="action primary punch-out">
-                <?= $block->escapeHTML($buttonText); ?>
+            <a href="<?= $escaper->escapeUrl($block->getPunchOutUrl()); ?>" class="action primary punch-out">
+                <?= $escaper->escapeHTML($buttonText); ?>
             </a>
         </div>
     <?php endif; ?>
     <style>
         [data-role="proceed-to-checkout"] { display: none !important; }
     </style>
+    <?php if ($customCss = $block->getCustomCss()): ?>
+        <style>
+            <?= $escaper->escapeHtml($customCss, ['noEscape' => true]); ?>
+        </style>
+    <?php endif; ?>
 <?php endif; ?>

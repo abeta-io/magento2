@@ -103,6 +103,14 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
+    public function getCustomCss(): ?string
+    {
+        return $this->getStoreValue(self::XML_PATH_CUSTOM_CSS);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getShippingMethod(): ?string
     {
         return $this->getStoreValue(self::XML_PATH_SHIPPING_METHOD);

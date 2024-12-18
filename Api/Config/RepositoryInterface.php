@@ -17,6 +17,7 @@ interface RepositoryInterface
     public const XML_PATH_BUTTON_LABEL = 'abeta_punch_out/settings/button_label';
     public const XML_PATH_SHIPPING_METHOD = 'abeta_punch_out/settings/shipping_method';
     public const XML_PATH_USE_MODAL = 'abeta_punch_out/settings/use_modal';
+    public const XML_PATH_CUSTOM_CSS = 'abeta_punch_out/settings/custom_css';
     public const XML_PATH_DEBUG = 'abeta_punch_out/debug/enabled';
 
     public const XML_PATH_STORE_COUNTRY_ID = 'general/store_information/country_id';
@@ -58,6 +59,13 @@ interface RepositoryInterface
      * @return string|null
      */
     public function getButtonLabel(): ?string;
+
+    /**
+     * Get Custom Css
+     *
+     * @return string|null
+     */
+    public function getCustomCss(): ?string;
 
     /**
      * Get default Shipping Method

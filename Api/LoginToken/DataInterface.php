@@ -20,6 +20,7 @@ interface DataInterface extends ExtensibleDataInterface
     public const EMPTY_CART_ON_LOGIN = 'empty_cart_on_login';
     public const LOGOUT_ON_PUNCHOUT = 'logout_on_punchout';
     public const RETURN_URL = 'return_url';
+    public const REDIRECT_URL = 'redirect_url';
     public const CREATED_AT = 'created_at';
 
     /**
@@ -98,6 +99,17 @@ interface DataInterface extends ExtensibleDataInterface
      * @return DataInterface
      */
     public function setReturnUrl(string $url): self;
+
+    /**
+     * @return string|null
+     */
+    public function getRedirectUlr(): ?string;
+
+    /**
+     * @param string|null $url
+     * @return DataInterface
+     */
+    public function setRedirectUrl(?string $url): self;
 
     /**
      * @return string

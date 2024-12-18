@@ -16,7 +16,10 @@ use Magento\Quote\Model\QuoteRepository;
  */
 class LoginCustomer
 {
-
+    /**
+     * @var string|null
+     */
+    public $redirectUrl = null;
     /**
      * @var TokenRepository
      */
@@ -53,6 +56,10 @@ class LoginCustomer
     }
 
     /**
+     * Execute login using a token
+     *
+     * @param string $token
+     * @return bool
      * @throws LocalizedException
      */
     public function execute(string $token): bool
@@ -70,6 +77,18 @@ class LoginCustomer
     }
 
     /**
+     * Get the redirect URL
+     *
+     * @return string|null
+     */
+    public function getRedirectUrl(): ?string
+    {
+        return $this->redirectUrl;
+    }
+
+    /**
+     * Set session data and redirect url
+     *
      * @param TokenData $tokenData
      * @return void
      */
@@ -78,9 +97,12 @@ class LoginCustomer
         $this->checkoutSession->setAbetaReturnUrl($tokenData->getReturnUrl());
         $this->checkoutSession->setAbetaSessionId($tokenData->getSessionId());
         $this->checkoutSession->setAbetaLogout($tokenData->getLogoutOnPunchout());
+        $this->redirectUrl = $tokenData->getRedirectUlr();
     }
 
     /**
+     * Clean the quote if it contains items
+     *
      * @return void
      * @throws LocalizedException
      * @throws NoSuchEntityException

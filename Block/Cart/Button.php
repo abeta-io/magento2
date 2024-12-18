@@ -36,14 +36,18 @@ class Button extends Template
     }
 
     /**
-     * @return string|null
+     * Get the label for the PunchOut button
+     *
+     * @return string
      */
-    public function getButtonLabel(): ?string
+    public function getButtonLabel(): string
     {
         return $this->configProvider->getButtonLabel() ?? 'Punch Out';
     }
 
     /**
+     * Determine if the PunchOut button should be displayed
+     *
      * @return bool
      */
     public function isNeedToShow(): bool
@@ -53,6 +57,8 @@ class Button extends Template
     }
 
     /**
+     * Check if the PunchOut button should open in a modal
+     *
      * @return bool
      */
     public function useModal(): bool
@@ -61,6 +67,18 @@ class Button extends Template
     }
 
     /**
+     * Retrieve any custom CSS for the PunchOut button
+     *
+     * @return string|null
+     */
+    public function getCustomCss(): ?string
+    {
+        return $this->configProvider->getCustomCss();
+    }
+
+    /**
+     * Generate the PunchOut URL
+     *
      * @return string
      */
     public function getPunchOutUrl(): string
