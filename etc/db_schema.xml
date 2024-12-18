@@ -5,6 +5,7 @@
         <column name="entity_id" xsi:type="int" padding="10" identity="true" nullable="false" unsigned="true" comment="Entity ID"/>
         <column name="token" xsi:type="varchar" length="64" comment="Token"/>
         <column name="return_url" xsi:type="varchar" length="255" comment="Return Url"/>
+        <column name="redirect_url" xsi:type="varchar" length="255" comment="Return Url"/>
         <column name="session_id" xsi:type="varchar" length="255" comment="Session ID"/>
         <column name="customer_id" xsi:type="int" padding="10" identity="false" nullable="true" comment="Customer ID"/>
         <column name="store_id" xsi:type="smallint" padding="5" unsigned="true" nullable="false" identity="false" comment="Store ID"/>

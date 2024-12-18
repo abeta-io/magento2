@@ -49,6 +49,21 @@ class Index extends Action
             $this->messageManager->addErrorMessage($exception->getMessage());
         }
 
+        return $this->redirectAfterResult($resultRedirect);
+    }
+
+    /**
+     * Redirect after processing the result
+     *
+     * @param Redirect $resultRedirect
+     * @return Redirect
+     */
+    private function redirectAfterResult(Redirect $resultRedirect): Redirect
+    {
+        if ($redirectUrl = $this->loginCustomer->getRedirectUrl()) {
+            return $resultRedirect->setUrl($redirectUrl);
+        }
+
         return $resultRedirect->setPath('/');
     }
 }

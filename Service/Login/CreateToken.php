@@ -145,6 +145,7 @@ class CreateToken
             ->setSessionId($this->loginData['session_id'])
             ->setStoreId((int)$this->loginData['store_id'])
             ->setReturnUrl($this->loginData['return_url'])
+            ->setRedirectUrl($this->loginData['redirect_url'] ?? null)
             ->setEmptyCartOnLogin($this->loginData['empty_cart_on_login'])
             ->setLogoutOnPunchout($this->loginData['logout_on_punchout']);
 
