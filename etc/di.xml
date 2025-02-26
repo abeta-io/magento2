@@ -9,6 +9,7 @@
     <preference for="Abeta\PunchOut\Api\Webapi\LoginInterface" type="Abeta\PunchOut\Model\Webapi\Login"/>
     <preference for="Abeta\PunchOut\Api\Webapi\CartInterface" type="Abeta\PunchOut\Model\Webapi\Cart"/>
     <preference for="Abeta\PunchOut\Api\Webapi\CheckoutInterface" type="Abeta\PunchOut\Model\Webapi\Checkout"/>
+    <preference for="Abeta\PunchOut\Api\Webapi\ItemDataInterface" type="Abeta\PunchOut\Model\Webapi\ItemData" />
 
     <type name="Abeta\PunchOut\Logger\ErrorLogger">
         <arguments>
