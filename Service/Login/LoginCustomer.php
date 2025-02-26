@@ -66,8 +66,12 @@ class LoginCustomer
     {
         $tokenData = $this->tokenRepository->getByToken($token, true);
         $customer = $this->customerRepository->getById($tokenData->getCustomerId());
+
         $this->session->setCustomerDataAsLoggedIn($customer);
         $this->setSessionData($tokenData);
+
+        $this->session->loginById($customer->getId());
+        $this->session->regenerateId();
 
         if ($tokenData->getEmptyCartOnLogin()) {
             $this->cleanQuote();
