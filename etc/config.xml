@@ -3,7 +3,7 @@
     <default>
         <abeta_punch_out>
             <general>
-                <version>v1.4.0</version>
+                <version>v1.5.0</version>
                 <api_version>1.0</api_version>
                 <enable>0</enable>
             </general>

@@ -18,5 +18,11 @@
             <resource ref="anonymous"/>
         </resources>
     </route>
+    <route url="/V1/abeta/itemData" method="POST">
+        <service class="Abeta\PunchOut\Api\Webapi\ItemDataInterface" method="export"/>
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
 </routes>
 
