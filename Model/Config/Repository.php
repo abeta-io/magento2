@@ -44,7 +44,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return string
      */
-    private function getStoreValue(string $path, int $storeId = null): string
+    private function getStoreValue(string $path, ?int $storeId = null): string
     {
         return (string)$this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, (int)$storeId);
     }
@@ -52,7 +52,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function isDebugMode(int $storeId = null): bool
+    public function isDebugMode(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_DEBUG, $storeId);
     }
@@ -63,7 +63,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return bool
      */
-    private function isSetFlag(string $path, int $storeId = null): bool
+    private function isSetFlag(string $path, ?int $storeId = null): bool
     {
         return $this->scopeConfig->isSetFlag($path, ScopeInterface::SCOPE_STORE, (int)$storeId);
     }
@@ -71,7 +71,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function isEnabled(int $storeId = null): bool
+    public function isEnabled(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_EXTENSION_ENABLE, $storeId);
     }
@@ -119,7 +119,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function useModal(int $storeId = null): bool
+    public function useModal(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_USE_MODAL, $storeId);
     }
@@ -127,7 +127,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function getStoreInformation(int $storeId = null): array
+    public function getStoreInformation(?int $storeId = null): array
     {
         return [
             'country_id' => $this->getStoreValue(self::XML_PATH_STORE_COUNTRY_ID, $storeId),

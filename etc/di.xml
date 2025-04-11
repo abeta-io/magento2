@@ -11,20 +11,30 @@
     <preference for="Abeta\PunchOut\Api\Webapi\CheckoutInterface" type="Abeta\PunchOut\Model\Webapi\Checkout"/>
     <preference for="Abeta\PunchOut\Api\Webapi\ItemDataInterface" type="Abeta\PunchOut\Model\Webapi\ItemData" />
 
-    <type name="Abeta\PunchOut\Logger\ErrorLogger">
+    <virtualType name="PunchOutDebugMonolog" type="Monolog\Logger">
         <arguments>
-            <argument name="name" xsi:type="string">AbetaError</argument>
+            <argument name="name" xsi:type="string">PunchOutDebug</argument>
             <argument name="handlers" xsi:type="array">
-                <item name="system" xsi:type="object">Abeta\PunchOut\Logger\Handler\Error</item>
+                <item name="debug" xsi:type="object">Abeta\PunchOut\Logger\Handler\Debug</item>
             </argument>
         </arguments>
-    </type>
+    </virtualType>
+    <virtualType name="PunchOutErrorMonolog" type="Monolog\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">PunchOutError</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="error" xsi:type="object">Abeta\PunchOut\Logger\Handler\Error</item>
+            </argument>
+        </arguments>
+    </virtualType>
     <type name="Abeta\PunchOut\Logger\DebugLogger">
         <arguments>
-            <argument name="name" xsi:type="string">AbetaDebug</argument>
-            <argument name="handlers" xsi:type="array">
-                <item name="system" xsi:type="object">Abeta\PunchOut\Logger\Handler\Debug</item>
-            </argument>
+            <argument name="logger" xsi:type="object">PunchOutDebugMonolog</argument>
+        </arguments>
+    </type>
+    <type name="Abeta\PunchOut\Logger\ErrorLogger">
+        <arguments>
+            <argument name="logger" xsi:type="object">PunchOutErrorMonolog</argument>
         </arguments>
     </type>
 
