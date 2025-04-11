@@ -1,5 +1,4 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Abeta\PunchOut\Model\Webapi;
 
@@ -61,13 +60,17 @@ class ItemData implements ItemDataInterface
             return [];
         }
 
-        $store = $this->getStore();
-        $product = $this->getProduct($store);
-        $quote = $this->createQuote($store, $product);
+        try {
+            $store = $this->getStore();
+            $product = $this->getProduct($store);
+            $quote = $this->createQuote($store, $product);
 
-        $item = $quote->getItemByProduct($product);
-        return $item ? [$item->getData()] : [];
-
+            $item = $quote->getItemByProduct($product);
+            return $item ? [$item->getData()] : [];
+        } catch (\Exception $exception) {
+            $this->logger->addDebugLog('ItemData Webapi', ['exception' => $exception->getMessage()]);
+            return [];
+        }
     }
 
     /**
@@ -80,12 +83,12 @@ class ItemData implements ItemDataInterface
     {
         return $this->validateAndGetEntity(
             'customer_id',
-            fn (int $id) => $this->customerRepository->getById($id)
+            fn ($id) => $this->customerRepository->getById((int) $id)
         );
     }
 
     /**
-     * Retrieve the product object from the request.
+     * Retrieve the product object using SKU first, with fallback to product ID.
      *
      * @param StoreInterface $store
      * @return ProductInterface
@@ -93,10 +96,20 @@ class ItemData implements ItemDataInterface
      */
     private function getProduct(StoreInterface $store): ProductInterface
     {
-        return $this->validateAndGetEntity(
-            'product_id',
-            fn (int $id) => $this->productRepository->getById($id, false, $store->getId())
+        $product = $this->validateAndGetEntity(
+            'sku',
+            fn ($sku) => $this->productRepository->get((string) $sku, false, $store->getId()),
+            false
         );
+
+        if (!$product) {
+            $product = $this->validateAndGetEntity(
+                'product_id',
+                fn ($id) => $this->productRepository->getById((int) $id, false, $store->getId())
+            );
+        }
+
+        return $product;
     }
 
     /**
@@ -109,7 +122,7 @@ class ItemData implements ItemDataInterface
     {
         return $this->validateAndGetEntity(
             'store_id',
-            fn (int $id) => $this->storeManager->getStore($id)
+            fn ($id) => $this->storeManager->getStore((int) $id)
         );
     }
 
@@ -130,7 +143,7 @@ class ItemData implements ItemDataInterface
             ->setStore($store)
             ->assignCustomer($customer);
 
-        $this->addProduct($quote, $product, $qty);
+        $this->addProduct($quote, $product, (int) $qty);
         $quote->collectTotals();
 
         return $quote;
@@ -155,19 +168,30 @@ class ItemData implements ItemDataInterface
     }
 
     /**
-     * Validate request data and fetch corresponding entity.
+     * Validate request data and fetch the corresponding entity.
      *
      * @param string $key
      * @param callable $fetcher
-     * @return mixed
+     * @param bool $throwException
+     * @return mixed|null
      * @throws LocalizedException
      */
-    private function validateAndGetEntity(string $key, callable $fetcher)
+    private function validateAndGetEntity(string $key, callable $fetcher, bool $throwException = true)
     {
         if (empty($this->postData[$key])) {
-            throw new LocalizedException(__('Missing data: %1', $key));
+            if ($throwException) {
+                throw new LocalizedException(__('Missing data: %1', $key));
+            }
+            return null;
         }
 
-        return $fetcher((int) $this->postData[$key]);
+        try {
+            return $fetcher($this->postData[$key]);
+        } catch (\Exception $e) {
+            if ($throwException) {
+                throw new LocalizedException(__('Could not retrieve entity for key: %1', $key));
+            }
+            return null;
+        }
     }
 }

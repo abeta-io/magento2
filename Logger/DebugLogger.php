@@ -8,43 +8,32 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Monolog\Logger;
 
 /**
- * DebugLogger logger class
+ * Wrapper around Monolog\Logger to log error-level messages for module.
+ * Automatically serializes array or object input using Magento's JSON serializer.
+ *
+ * Example usage:
+ * $logger->addLog('API Error', ['message' => 'Debug response', 'code' => 200]);
  */
-class DebugLogger extends Logger
+class DebugLogger
 {
 
-    /**
-     * Data that should be removed from debug log.
-     */
-    private const REPLACE_KEY_VALUE = [
-        'password' => '****'
-    ];
+    private const REPLACE_KEY_VALUE = ['password' => '****'];
 
-    /**
-     * @var Json
-     */
-    private $json;
-    /**
-     * @var ConfigProvider
-     */
-    private $configProvider;
-    /**
-     * @var RemoteAddress
-     */
-    private $remoteAddress;
+    private Logger $logger;
+    private Json $json;
+    private ConfigProvider $configProvider;
+    private RemoteAddress $remoteAddress;
 
     public function __construct(
+        Logger $logger,
         Json $json,
         ConfigProvider $configProvider,
-        RemoteAddress $remoteAddress,
-        string $name,
-        array $handlers = [],
-        array $processors = []
+        RemoteAddress $remoteAddress
     ) {
+        $this->logger = $logger;
         $this->json = $json;
         $this->configProvider = $configProvider;
         $this->remoteAddress = $remoteAddress;
-        parent::__construct($name, $handlers, $processors);
     }
 
     /**
@@ -61,9 +50,9 @@ class DebugLogger extends Logger
 
         if (is_array($data) || is_object($data)) {
             $data = is_array($data) ? $this->cleanUpDebugLog($data) : $data;
-            $this->addRecord(static::INFO, $type . ': ' . $this->json->serialize($data));
+            $this->logger->info( $type . ': ' . $this->json->serialize($data));
         } else {
-            $this->addRecord(static::INFO, $type . ': ' . $data);
+            $this->logger->info( $type . ': ' . $data);
         }
     }
 

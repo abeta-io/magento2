@@ -2,35 +2,33 @@
 
 namespace Abeta\PunchOut\Logger;
 
+use Abeta\PunchOut\Api\Config\RepositoryInterface as ConfigProvider;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Magento\Framework\Serialize\Serializer\Json;
 use Monolog\Logger;
 
 /**
- * ErrorLogger logger class
+ * Wrapper around Monolog\Logger to log error-level messages for module.
+ * Automatically serializes array or object input using Magento's JSON serializer.
+ *
+ * Example usage:
+ * $logger->addLog('API Error', ['message' => 'Error msg', 'code' => 500]);
  */
-class ErrorLogger extends Logger
+class ErrorLogger
 {
 
-    /**
-     * @var Json
-     */
-    private $json;
-    /**
-     * @var RemoteAddress
-     */
-    private $remoteAddress;
+    private Logger $logger;
+    private Json $json;
+    private RemoteAddress $remoteAddress;
 
     public function __construct(
+        Logger $logger,
         Json $json,
-        RemoteAddress $remoteAddress,
-        string $name,
-        array $handlers = [],
-        array $processors = []
+        RemoteAddress $remoteAddress
     ) {
+        $this->logger = $logger;
         $this->json = $json;
         $this->remoteAddress = $remoteAddress;
-        parent::__construct($name, $handlers, $processors);
     }
 
     /**
@@ -43,9 +41,10 @@ class ErrorLogger extends Logger
     {
         if (is_array($data) || is_object($data)) {
             $data['remote_address'] = $this->remoteAddress->getRemoteAddress();
-            $this->addRecord(static::EMERGENCY, $type . ': ' . $this->json->serialize($data));
+            $this->logger->info( $type . ': ' . $this->json->serialize($data));
         } else {
-            $this->addRecord(static::EMERGENCY, $type . ': ' . $data);
+            $this->logger->info( $type . ': ' . $data);
         }
     }
+
 }

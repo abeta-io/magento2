@@ -37,7 +37,7 @@ interface RepositoryInterface
      *
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get API Key
@@ -81,7 +81,7 @@ interface RepositoryInterface
      *
      * @return bool
      */
-    public function useModal(int $storeId = null): bool;
+    public function useModal(?int $storeId = null): bool;
 
     /**
      * Check if debug mode is enabled
@@ -90,7 +90,7 @@ interface RepositoryInterface
      *
      * @return bool
      */
-    public function isDebugMode(int $storeId = null): bool;
+    public function isDebugMode(?int $storeId = null): bool;
 
     /**
      * Get store information
@@ -99,5 +99,5 @@ interface RepositoryInterface
      *
      * @return array
      */
-    public function getStoreInformation(int $storeId = null): array;
+    public function getStoreInformation(?int $storeId = null): array;
 }
