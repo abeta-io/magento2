@@ -142,7 +142,23 @@ class Data extends AbstractModel implements ExtensibleDataInterface, DataInterfa
     /**
      * @inheritDoc
      */
-    public function getRedirectUlr(): ?string
+    public function getLoginOnly(): bool
+    {
+        return (bool)$this->getData(self::LOGIN_ONLY);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setLoginOnly(bool $loginOnly): DataInterface
+    {
+        return $this->setData(self::LOGIN_ONLY, $loginOnly);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getRedirectUrl(): ?string
     {
         return $this->getData(self::REDIRECT_URL);
     }

@@ -21,6 +21,7 @@ interface DataInterface extends ExtensibleDataInterface
     public const LOGOUT_ON_PUNCHOUT = 'logout_on_punchout';
     public const RETURN_URL = 'return_url';
     public const REDIRECT_URL = 'redirect_url';
+    public const LOGIN_ONLY = 'login_only';
     public const CREATED_AT = 'created_at';
 
     /**
@@ -103,7 +104,18 @@ interface DataInterface extends ExtensibleDataInterface
     /**
      * @return string|null
      */
-    public function getRedirectUlr(): ?string;
+    public function getRedirectUrl(): ?string;
+
+    /**
+     * @return bool
+     */
+    public function getLoginOnly(): bool;
+
+    /**
+     * @param bool $loginOnly
+     * @return DataInterface
+     */
+    public function setLoginOnly(bool $loginOnly): self;
 
     /**
      * @param string|null $url

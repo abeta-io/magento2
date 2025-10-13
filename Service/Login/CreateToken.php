@@ -26,50 +26,19 @@ class CreateToken
         'username',
         'password',
         'session_id',
-        'api_key',
-        'return_url'
+        'api_key'
     ];
 
-    /**
-     * @var array
-     */
-    private $loginData = [];
-    /**
-     * @var LogRepository
-     */
-    private $logRepository;
-    /**
-     * @var ConfigProvider
-     */
-    private $configProvider;
-    /**
-     * @var Random
-     */
-    private $mathRandom;
-    /**
-     * @var TokenRepository
-     */
-    private $tokenRepository;
-    /**
-     * @var CustomerRepository
-     */
-    private $customerRepository;
-    /**
-     * @var AccountManagementInterface
-     */
-    private $accountManagement;
-    /**
-     * @var Emulation
-     */
-    private $appEmulation;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * @var ResourceConnection
-     */
-    private $resourceConnection;
+    private array $loginData = [];
+    private LogRepository $logRepository;
+    private ConfigProvider $configProvider;
+    private Random $mathRandom;
+    private TokenRepository $tokenRepository;
+    private CustomerRepository $customerRepository;
+    private AccountManagementInterface $accountManagement;
+    private Emulation $appEmulation;
+    private StoreManagerInterface $storeManager;
+    private ResourceConnection $resourceConnection;
 
     public function __construct(
         LogRepository $logRepository,
@@ -130,6 +99,8 @@ class CreateToken
         foreach (['empty_cart_on_login', 'logout_on_punchout'] as $key) {
             $this->loginData[$key] = !isset($this->loginData[$key]) || (bool)$this->loginData[$key];
         }
+
+        $this->loginData['login_only'] = isset($this->loginData['login_only']) && $this->loginData['login_only'];
     }
 
     /**
@@ -142,12 +113,13 @@ class CreateToken
         $loginToken = $this->tokenRepository->create();
         $loginToken->setCustomerId((int)$customer->getId())
             ->setToken($this->mathRandom->getUniqueHash('AB'))
-            ->setSessionId($this->loginData['session_id'])
+            ->setSessionId($this->loginData['session_id'] ?? null)
             ->setStoreId((int)$this->loginData['store_id'])
-            ->setReturnUrl($this->loginData['return_url'])
+            ->setReturnUrl($this->loginData['return_url'] ?? null)
             ->setRedirectUrl($this->loginData['redirect_url'] ?? null)
             ->setEmptyCartOnLogin($this->loginData['empty_cart_on_login'])
-            ->setLogoutOnPunchout($this->loginData['logout_on_punchout']);
+            ->setLogoutOnPunchout($this->loginData['logout_on_punchout'])
+            ->setLoginOnly((bool)$this->loginData['login_only']);
 
         return $this->tokenRepository->save($loginToken)->getToken();
     }
