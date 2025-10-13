@@ -90,7 +90,7 @@ class LoginCustomer
             $this->checkoutSession->setAbetaLogout($tokenData->getLogoutOnPunchout());
         }
 
-        $this->redirectUrl = $tokenData->getRedirectUlr();
+        $this->redirectUrl = $tokenData->getRedirectUrl();
     }
 
     /**

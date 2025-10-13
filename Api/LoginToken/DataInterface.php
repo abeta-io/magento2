@@ -104,7 +104,7 @@ interface DataInterface extends ExtensibleDataInterface
     /**
      * @return string|null
      */
-    public function getRedirectUlr(): ?string;
+    public function getRedirectUrl(): ?string;
 
     /**
      * @return bool

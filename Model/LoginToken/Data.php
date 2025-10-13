@@ -158,7 +158,7 @@ class Data extends AbstractModel implements ExtensibleDataInterface, DataInterfa
     /**
      * @inheritDoc
      */
-    public function getRedirectUlr(): ?string
+    public function getRedirectUrl(): ?string
     {
         return $this->getData(self::REDIRECT_URL);
     }
