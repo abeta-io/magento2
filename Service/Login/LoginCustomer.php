@@ -16,30 +16,12 @@ use Magento\Quote\Model\QuoteRepository;
  */
 class LoginCustomer
 {
-    /**
-     * @var string|null
-     */
-    public $redirectUrl = null;
-    /**
-     * @var TokenRepository
-     */
-    private $tokenRepository;
-    /**
-     * @var Session
-     */
-    private $session;
-    /**
-     * @var CheckoutSession
-     */
-    private $checkoutSession;
-    /**
-     * @var CustomerRepositoryInterface
-     */
-    private $customerRepository;
-    /**
-     * @var QuoteRepository
-     */
-    private $quoteRepository;
+    public ?string $redirectUrl = null;
+    private TokenRepository $tokenRepository;
+    private Session $session;
+    private CheckoutSession $checkoutSession;
+    private CustomerRepositoryInterface $customerRepository;
+    private QuoteRepository $quoteRepository;
 
     public function __construct(
         TokenRepository $tokenRepository,
@@ -98,9 +80,16 @@ class LoginCustomer
      */
     private function setSessionData(TokenData $tokenData): void
     {
-        $this->checkoutSession->setAbetaReturnUrl($tokenData->getReturnUrl());
-        $this->checkoutSession->setAbetaSessionId($tokenData->getSessionId());
-        $this->checkoutSession->setAbetaLogout($tokenData->getLogoutOnPunchout());
+        if ($tokenData->getLoginOnly()) {
+            $this->checkoutSession->unsAbetaReturnUrl();
+            $this->checkoutSession->unsAbetaSessionId();
+            $this->checkoutSession->unsAbetaLogout();
+        } else {
+            $this->checkoutSession->setAbetaReturnUrl($tokenData->getReturnUrl());
+            $this->checkoutSession->setAbetaSessionId($tokenData->getSessionId());
+            $this->checkoutSession->setAbetaLogout($tokenData->getLogoutOnPunchout());
+        }
+
         $this->redirectUrl = $tokenData->getRedirectUlr();
     }
 
