@@ -55,7 +55,9 @@ class ItemData implements ItemDataInterface
             return [];
         }
 
-        $this->postData = array_map('trim', $this->request->getBodyParams());
+        $this->postData = array_map(function ($value) {
+            return is_string($value) ? trim($value) : $value;
+        }, $this->request->getBodyParams());
         if ($this->postData['api_key'] !== $this->configProvider->getApiKey()) {
             return [];
         }
@@ -65,7 +67,37 @@ class ItemData implements ItemDataInterface
             $products = $this->getProducts($store);
             $quote = $this->createQuote($store, $products);
 
-            return [$quote->getData()];
+            $quoteData = $quote->getData();
+            $quoteData['items'] = [];
+            foreach ($quote->getAllVisibleItems() as $item) {
+                $quoteData['items'][] = $item->getData();
+            }
+
+            // Add available shipping rates
+            $shippingAddress = $quote->getShippingAddress();
+            if ($shippingAddress) {
+                $quoteData['available_shipping_rates'] = [];
+                foreach ($shippingAddress->getAllShippingRates() as $rate) {
+                    $quoteData['available_shipping_rates'][] = [
+                        'carrier_code' => $rate->getCarrier(),
+                        'carrier_title' => $rate->getCarrierTitle(),
+                        'method_code' => $rate->getMethod(),
+                        'method_title' => $rate->getMethodTitle(),
+                        'price' => $rate->getPrice(),
+                        'cost' => $rate->getCost(),
+                        'code' => $rate->getCode()
+                    ];
+                }
+
+                // Add selected shipping method details
+                $quoteData['selected_shipping_method'] = [
+                    'code' => $shippingAddress->getShippingMethod(),
+                    'description' => $shippingAddress->getShippingDescription(),
+                    'amount' => $shippingAddress->getShippingAmount(),
+                ];
+            }
+
+            return [$quoteData];
         } catch (\Exception $exception) {
             $this->logger->addDebugLog('ItemData Webapi', ['exception' => $exception->getMessage()]);
             return [];
@@ -220,6 +252,20 @@ class ItemData implements ItemDataInterface
             $product = $productData['product'];
             $qty = $productData['qty'] ?? 1;
             $this->addProduct($quote, $product, (int) $qty);
+        }
+
+        // Set shipping address and collect shipping rates
+        $shippingAddress = $quote->getShippingAddress();
+        if ($shippingAddress) {
+            $shippingAddress->setCollectShippingRates(true);
+            $shippingAddress->collectShippingRates();
+
+            // Set first available shipping method
+            $rates = $shippingAddress->getAllShippingRates();
+            if (!empty($rates)) {
+                $firstRate = reset($rates);
+                $shippingAddress->setShippingMethod($firstRate->getCode());
+            }
         }
 
         $quote->collectTotals();
