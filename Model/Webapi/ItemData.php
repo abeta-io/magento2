@@ -74,17 +74,27 @@ class ItemData implements ItemDataInterface
     }
 
     /**
-     * Retrieve the customer object from the request.
+     * Retrieve the customer object using customer ID first, with fallback to email.
      *
      * @return CustomerInterface
      * @throws LocalizedException
      */
     private function getCustomer(): CustomerInterface
     {
-        return $this->validateAndGetEntity(
+        $customer = $this->validateAndGetEntity(
             'customer_id',
-            fn ($id) => $this->customerRepository->getById((int) $id)
+            fn ($id) => $this->customerRepository->getById((int) $id),
+            false
         );
+
+        if (!$customer) {
+            $customer = $this->validateAndGetEntity(
+                'email',
+                fn ($email) => $this->customerRepository->get((string) $email)
+            );
+        }
+
+        return $customer;
     }
 
     /**
