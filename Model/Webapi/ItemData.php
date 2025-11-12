@@ -55,18 +55,49 @@ class ItemData implements ItemDataInterface
             return [];
         }
 
-        $this->postData = array_map('trim', $this->request->getBodyParams());
+        $this->postData = array_map(function ($value) {
+            return is_string($value) ? trim($value) : $value;
+        }, $this->request->getBodyParams());
         if ($this->postData['api_key'] !== $this->configProvider->getApiKey()) {
             return [];
         }
 
         try {
             $store = $this->getStore();
-            $product = $this->getProduct($store);
-            $quote = $this->createQuote($store, $product);
+            $products = $this->getProducts($store);
+            $quote = $this->createQuote($store, $products);
 
-            $item = $quote->getItemByProduct($product);
-            return $item ? [$item->getData()] : [];
+            $quoteData = $quote->getData();
+            $quoteData['items'] = [];
+            foreach ($quote->getAllVisibleItems() as $item) {
+                $quoteData['items'][] = $item->getData();
+            }
+
+            // Add available shipping rates
+            $shippingAddress = $quote->getShippingAddress();
+            if ($shippingAddress) {
+                $quoteData['available_shipping_rates'] = [];
+                foreach ($shippingAddress->getAllShippingRates() as $rate) {
+                    $quoteData['available_shipping_rates'][] = [
+                        'carrier_code' => $rate->getCarrier(),
+                        'carrier_title' => $rate->getCarrierTitle(),
+                        'method_code' => $rate->getMethod(),
+                        'method_title' => $rate->getMethodTitle(),
+                        'price' => $rate->getPrice(),
+                        'cost' => $rate->getCost(),
+                        'code' => $rate->getCode()
+                    ];
+                }
+
+                // Add selected shipping method details
+                $quoteData['selected_shipping_method'] = [
+                    'code' => $shippingAddress->getShippingMethod(),
+                    'description' => $shippingAddress->getShippingDescription(),
+                    'amount' => $shippingAddress->getShippingAmount(),
+                ];
+            }
+
+            return [$quoteData];
         } catch (\Exception $exception) {
             $this->logger->addDebugLog('ItemData Webapi', ['exception' => $exception->getMessage()]);
             return [];
@@ -74,17 +105,92 @@ class ItemData implements ItemDataInterface
     }
 
     /**
-     * Retrieve the customer object from the request.
+     * Retrieve the customer object using customer ID first, with fallback to email.
      *
      * @return CustomerInterface
      * @throws LocalizedException
      */
     private function getCustomer(): CustomerInterface
     {
-        return $this->validateAndGetEntity(
+        $customer = $this->validateAndGetEntity(
             'customer_id',
-            fn ($id) => $this->customerRepository->getById((int) $id)
+            fn ($id) => $this->customerRepository->getById((int) $id),
+            false
         );
+
+        if (!$customer) {
+            $customer = $this->validateAndGetEntity(
+                'email',
+                fn ($email) => $this->customerRepository->get((string) $email)
+            );
+        }
+
+        return $customer;
+    }
+
+    /**
+     * Retrieve products array from request data.
+     * Supports both multiple products array and single product fallback.
+     *
+     * @param StoreInterface $store
+     * @return array
+     * @throws LocalizedException
+     */
+    private function getProducts(StoreInterface $store): array
+    {
+        $products = [];
+
+        // Check if multiple products are provided
+        if (!empty($this->postData['products']) && is_array($this->postData['products'])) {
+            foreach ($this->postData['products'] as $productData) {
+                $product = $this->getProductFromData($productData, $store);
+                if ($product) {
+                    $products[] = [
+                        'product' => $product,
+                        'qty' => $productData['qty'] ?? 1
+                    ];
+                }
+            }
+        } else {
+            // Fallback to single product
+            $product = $this->getProduct($store);
+            $products[] = [
+                'product' => $product,
+                'qty' => $this->postData['qty'] ?? 1
+            ];
+        }
+
+        return $products;
+    }
+
+    /**
+     * Retrieve a single product from product data array.
+     *
+     * @param array $productData
+     * @param StoreInterface $store
+     * @return ProductInterface|null
+     */
+    private function getProductFromData(array $productData, StoreInterface $store): ?ProductInterface
+    {
+        // Try SKU first
+        if (!empty($productData['sku'])) {
+            try {
+                return $this->productRepository->get((string) $productData['sku'], false, $store->getId());
+            } catch (\Exception $e) {
+                // Continue to try product_id
+            }
+        }
+
+        // Try product ID
+        if (!empty($productData['product_id'])) {
+            try {
+                return $this->productRepository->getById((int) $productData['product_id'], false, $store->getId());
+            } catch (\Exception $e) {
+                // Product not found
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -127,23 +233,41 @@ class ItemData implements ItemDataInterface
     }
 
     /**
-     * Create a quote for the customer with the specified product and quantity.
+     * Create a quote for the customer with the specified products and quantities.
      *
      * @param StoreInterface $store
-     * @param ProductInterface $product
+     * @param ProductInterface[] $products
      * @return Quote
      * @throws LocalizedException
      */
-    private function createQuote(StoreInterface $store, ProductInterface $product): Quote
+    private function createQuote(StoreInterface $store, array $products): Quote
     {
         $customer = $this->getCustomer();
-        $qty = $this->postData['qty'] ?? 1;
 
         $quote = $this->quoteFactory->create()
             ->setStore($store)
             ->assignCustomer($customer);
 
-        $this->addProduct($quote, $product, (int) $qty);
+        foreach ($products as $productData) {
+            $product = $productData['product'];
+            $qty = $productData['qty'] ?? 1;
+            $this->addProduct($quote, $product, (int) $qty);
+        }
+
+        // Set shipping address and collect shipping rates
+        $shippingAddress = $quote->getShippingAddress();
+        if ($shippingAddress) {
+            $shippingAddress->setCollectShippingRates(true);
+            $shippingAddress->collectShippingRates();
+
+            // Set first available shipping method
+            $rates = $shippingAddress->getAllShippingRates();
+            if (!empty($rates)) {
+                $firstRate = reset($rates);
+                $shippingAddress->setShippingMethod($firstRate->getCode());
+            }
+        }
+
         $quote->collectTotals();
 
         return $quote;
