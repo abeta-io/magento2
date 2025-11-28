@@ -238,6 +238,9 @@ class Export
                 continue;
             }
 
+            $itemData = $cartItem->getData();
+            $itemData['options'] = $this->addOptions($cartItem);
+
             $products[$cartItem->getItemId()] = [
                 'standard' => [
                     'type' => 'product',
@@ -254,7 +257,7 @@ class Export
                     'image_url' => $this->getProductImageData($cartItem),
                     'children' => [],
                 ],
-                'cart_item' => $cartItem->getData(),
+                'cart_item' => $itemData,
                 'product_data' => $this->getProductDataArray($cartItem),
                 'categories' => $this->getCategoriesName($cartItem)
             ];
@@ -432,5 +435,61 @@ class Export
         }
 
         return $summaryData;
+    }
+
+    /**
+     * Add options data to quote item with decoded values and labels.
+     *
+     * @param Quote\Item $item
+     * @return array
+     */
+    private function addOptions(Quote\Item $item): array
+    {
+        $options = [];
+        foreach ($item->getOptions() as $option) {
+            $optionData = $option->getData();
+
+            // Decode JSON values
+            if (!empty($optionData['value']) && $this->isJson($optionData['value'])) {
+                $optionData['value_decoded'] = json_decode($optionData['value'], true);
+            }
+
+            // Add option label/title
+            $product = $item->getProduct();
+            if ($product && strpos($option->getCode(), 'option_') === 0) {
+                $optionId = str_replace('option_', '', $option->getCode());
+                $productOption = $product->getOptionById($optionId);
+                if ($productOption) {
+                    $optionData['label'] = $productOption->getTitle();
+                    $optionData['type'] = $productOption->getType();
+
+                    // For select/dropdown options, get the value label
+                    if (in_array($productOption->getType(), ['drop_down', 'radio', 'checkbox', 'multiple'])) {
+                        foreach ($productOption->getValues() as $value) {
+                            if ($value->getOptionTypeId() == $option->getValue()) {
+                                $optionData['value_label'] = $value->getTitle();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $options[] = $optionData;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Check if a string is valid JSON.
+     *
+     * @param string $string
+     * @return bool
+     */
+    private function isJson(string $string): bool
+    {
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 }
