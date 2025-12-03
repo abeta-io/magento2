@@ -254,6 +254,9 @@ class ItemData implements ItemDataInterface
             $this->addProduct($quote, $product, (int) $qty);
         }
 
+        // Collect totals before shipping rates to ensure accurate calculations
+        $quote->collectTotals();
+
         // Set shipping address and collect shipping rates
         $shippingAddress = $quote->getShippingAddress();
         if ($shippingAddress) {
