@@ -52,10 +52,10 @@ interface DataInterface extends ExtensibleDataInterface
     public function getSessionId(): string;
 
     /**
-     * @param string $sessionId
+     * @param string|null $sessionId
      * @return DataInterface
      */
-    public function setSessionId(string $sessionId): self;
+    public function setSessionId(?string $sessionId): self;
 
     /**
      * @return int
@@ -96,10 +96,10 @@ interface DataInterface extends ExtensibleDataInterface
     public function getReturnUrl(): string;
 
     /**
-     * @param string $url
+     * @param string|null $url
      * @return DataInterface
      */
-    public function setReturnUrl(string $url): self;
+    public function setReturnUrl(?string $url): self;
 
     /**
      * @return string|null
