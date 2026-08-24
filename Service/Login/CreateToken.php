@@ -8,6 +8,7 @@ use Abeta\PunchOut\Api\LoginToken\RepositoryInterface as TokenRepository;
 use Magento\Customer\Api\AccountManagementInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface as CustomerRepository;
 use Magento\Customer\Api\Data\CustomerInterface;
+use Magento\Customer\Api\Data\CustomerInterfaceFactory;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\LocalizedException;
@@ -35,6 +36,7 @@ class CreateToken
     private Random $mathRandom;
     private TokenRepository $tokenRepository;
     private CustomerRepository $customerRepository;
+    private CustomerInterfaceFactory $customerFactory;
     private AccountManagementInterface $accountManagement;
     private Emulation $appEmulation;
     private StoreManagerInterface $storeManager;
@@ -46,6 +48,7 @@ class CreateToken
         TokenRepository $tokenRepository,
         Random $mathRandom,
         CustomerRepository $customerRepository,
+        CustomerInterfaceFactory $customerFactory,
         AccountManagementInterface $accountManagement,
         Emulation $appEmulation,
         StoreManagerInterface $storeManager,
@@ -56,6 +59,7 @@ class CreateToken
         $this->tokenRepository = $tokenRepository;
         $this->mathRandom = $mathRandom;
         $this->customerRepository = $customerRepository;
+        $this->customerFactory = $customerFactory;
         $this->accountManagement = $accountManagement;
         $this->appEmulation = $appEmulation;
         $this->storeManager = $storeManager;
@@ -131,7 +135,7 @@ class CreateToken
      */
     private function getCustomer(): CustomerInterface
     {
-        if (!$this->findCustomerByEmail()) {
+        if (!$this->findCustomerByEmail($this->loginData['username'])) {
             throw new LocalizedException(__('No active customer found for %1', $this->loginData['username']));
         }
 
@@ -139,22 +143,78 @@ class CreateToken
             ->startEnvironmentEmulation((int)$this->loginData['store_id'], Area::AREA_FRONTEND, true);
 
         $this->accountManagement->authenticate($this->loginData['username'], $this->loginData['password']);
-        $customer = $this->customerRepository->get($this->loginData['username']);
+        $masterCustomer = $this->customerRepository->get($this->loginData['username']);
 
         $this->appEmulation->stopEnvironmentEmulation();
 
-        return $customer;
+        $buyerEmail = $this->loginData['buyer_email'] ?? null;
+        if (empty($buyerEmail)) {
+            return $masterCustomer;
+        }
+
+        return $this->getOrCreateBuyerCustomer($buyerEmail, $masterCustomer);
     }
 
-    /**
-     * @return bool
-     */
-    private function findCustomerByEmail(): bool
+    private function getOrCreateBuyerCustomer(string $buyerEmail, CustomerInterface $masterCustomer): CustomerInterface
+    {
+        $storeId = (int)$this->loginData['store_id'];
+
+        if ($this->findCustomerByEmail($buyerEmail)) {
+            $buyer = $this->customerRepository->get($buyerEmail);
+        } else {
+            $buyer = $this->createBuyerCustomer($buyerEmail, $masterCustomer, $storeId);
+        }
+
+        $this->syncCustomerData($buyer, $masterCustomer);
+
+        return $buyer;
+    }
+
+    private function createBuyerCustomer(
+        string $email,
+        CustomerInterface $masterCustomer,
+        int $storeId
+    ): CustomerInterface {
+        $store = $this->storeManager->getStore($storeId);
+        $websiteId = (int)$store->getWebsiteId();
+
+        $customer = $this->customerFactory->create();
+        $customer->setEmail($email);
+        $customer->setFirstname($this->loginData['buyer_first_name'] ?? $masterCustomer->getFirstname());
+        $customer->setLastname($this->loginData['buyer_last_name'] ?? $masterCustomer->getLastname());
+        $customer->setStoreId($storeId);
+        $customer->setWebsiteId($websiteId);
+        $customer->setGroupId($masterCustomer->getGroupId());
+        $customer->setTaxvat($masterCustomer->getTaxvat());
+
+        return $this->customerRepository->save($customer);
+    }
+
+    private function syncCustomerData(CustomerInterface $buyer, CustomerInterface $masterCustomer): void
+    {
+        $changed = false;
+
+        if ($buyer->getGroupId() !== $masterCustomer->getGroupId()) {
+            $buyer->setGroupId($masterCustomer->getGroupId());
+            $changed = true;
+        }
+
+        if ($buyer->getTaxvat() !== $masterCustomer->getTaxvat()) {
+            $buyer->setTaxvat($masterCustomer->getTaxvat());
+            $changed = true;
+        }
+
+        if ($changed) {
+            $this->customerRepository->save($buyer);
+        }
+    }
+
+    private function findCustomerByEmail(string $email): bool
     {
         $connection = $this->resourceConnection->getConnection();
         $select = $connection->select()
             ->from($this->resourceConnection->getTableName('customer_entity'), 'store_id')
-            ->where('email = ?', $this->loginData['username'])
+            ->where('email = ?', $email)
             ->where('is_active = 1')
             ->limit(1);
 
