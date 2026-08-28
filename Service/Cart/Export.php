@@ -5,6 +5,7 @@ namespace Abeta\PunchOut\Service\Cart;
 use Abeta\PunchOut\Api\Config\RepositoryInterface as ConfigProvider;
 use Abeta\PunchOut\Api\Log\RepositoryInterface as LogRepository;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Media\Config as CatalogProductMediaConfig;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -259,6 +260,7 @@ class Export
                 ],
                 'cart_item' => $itemData,
                 'product_data' => $this->getProductDataArray($cartItem),
+                'product_attributes' => $this->resolveProductAttributes($cartItem),
                 'categories' => $this->getCategoriesName($cartItem)
             ];
         }
@@ -332,6 +334,54 @@ class Export
         } catch (\Exception $exception) {
             return $cartItem->getProduct()->getData();
         }
+    }
+
+    /**
+     * Resolve product attributes to their frontend labels.
+     * For select/multiselect attributes, returns the label instead of the option ID.
+     *
+     * @param QuoteItem $cartItem
+     * @return array
+     */
+    private function resolveProductAttributes(QuoteItem $cartItem): array
+    {
+        $resolved = [];
+
+        try {
+            $storeProduct = $this->productRepository->getById(
+                (int)$cartItem->getProduct()->getId(),
+                false,
+                $cartItem->getStoreId()
+            );
+        } catch (\Exception $e) {
+            return $resolved;
+        }
+
+        if (!$storeProduct instanceof Product) {
+            return $resolved;
+        }
+
+        $attributes = $storeProduct->getAttributes();
+        foreach ($attributes as $attribute) {
+            $code = $attribute->getAttributeCode();
+            $value = $storeProduct->getData($code);
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $frontendInput = $attribute->getFrontendInput();
+            if (in_array($frontendInput, ['select', 'multiselect'])) {
+                $text = $storeProduct->getAttributeText($code);
+                if ($text !== false && $text !== '') {
+                    $resolved[$code] = is_array($text) ? implode(', ', $text) : (string)$text;
+                }
+            } elseif ($attribute->getIsUserDefined() && !in_array($frontendInput, ['media_image', 'gallery'])) {
+                $resolved[$code] = $value;
+            }
+        }
+
+        return $resolved;
     }
 
     /**

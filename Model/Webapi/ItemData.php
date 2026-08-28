@@ -7,6 +7,7 @@ use Abeta\PunchOut\Api\Log\RepositoryInterface as LogRepository;
 use Abeta\PunchOut\Api\Webapi\ItemDataInterface;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Framework\DataObject;
@@ -71,7 +72,12 @@ class ItemData implements ItemDataInterface
             $quoteData = $quote->getData();
             $quoteData['items'] = [];
             foreach ($quote->getAllVisibleItems() as $item) {
-                $quoteData['items'][] = $item->getData();
+                $itemData = $item->getData();
+                $itemData['product_attributes'] = $this->resolveProductAttributes(
+                    $item->getProduct(),
+                    $store
+                );
+                $quoteData['items'][] = $itemData;
             }
 
             // Add available shipping rates
@@ -321,5 +327,54 @@ class ItemData implements ItemDataInterface
             }
             return null;
         }
+    }
+
+    /**
+     * Resolve product attributes to their frontend labels.
+     * For select/multiselect attributes, returns the label instead of the option ID.
+     *
+     * @param Product $product
+     * @param StoreInterface $store
+     * @return array
+     */
+    private function resolveProductAttributes(Product $product, StoreInterface $store): array
+    {
+        $resolved = [];
+
+        try {
+            $storeProduct = $this->productRepository->getById(
+                (int)$product->getId(),
+                false,
+                $store->getId()
+            );
+        } catch (\Exception $e) {
+            return $resolved;
+        }
+
+        if (!$storeProduct instanceof Product) {
+            return $resolved;
+        }
+
+        $attributes = $storeProduct->getAttributes();
+        foreach ($attributes as $attribute) {
+            $code = $attribute->getAttributeCode();
+            $value = $storeProduct->getData($code);
+
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $frontendInput = $attribute->getFrontendInput();
+            if (in_array($frontendInput, ['select', 'multiselect'])) {
+                $text = $storeProduct->getAttributeText($code);
+                if ($text !== false && $text !== '') {
+                    $resolved[$code] = is_array($text) ? implode(', ', $text) : (string)$text;
+                }
+            } elseif ($attribute->getIsUserDefined() && !in_array($frontendInput, ['media_image', 'gallery'])) {
+                $resolved[$code] = $value;
+            }
+        }
+
+        return $resolved;
     }
 }
