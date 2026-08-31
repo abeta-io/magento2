@@ -56,7 +56,7 @@ class Data extends AbstractModel implements ExtensibleDataInterface, DataInterfa
      */
     public function getCreatedAt(): string
     {
-        return $this->getData(self::CREATED_AT);
+        return (string)$this->getData(self::CREATED_AT);
     }
 
     /**
@@ -64,13 +64,13 @@ class Data extends AbstractModel implements ExtensibleDataInterface, DataInterfa
      */
     public function getSessionId(): string
     {
-        return $this->getData(self::SESSION_ID);
+        return (string)$this->getData(self::SESSION_ID);
     }
 
     /**
      * @inheritDoc
      */
-    public function setSessionId(string $sessionId): DataInterface
+    public function setSessionId(?string $sessionId): DataInterface
     {
         return $this->setData(self::SESSION_ID, $sessionId);
     }
@@ -128,13 +128,13 @@ class Data extends AbstractModel implements ExtensibleDataInterface, DataInterfa
      */
     public function getReturnUrl(): string
     {
-        return $this->getData(self::RETURN_URL);
+        return (string)$this->getData(self::RETURN_URL);
     }
 
     /**
      * @inheritDoc
      */
-    public function setReturnUrl(string $url): DataInterface
+    public function setReturnUrl(?string $url): DataInterface
     {
         return $this->setData(self::RETURN_URL, $url);
     }
