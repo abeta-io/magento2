@@ -135,7 +135,8 @@ class CreateToken
      */
     private function getCustomer(): CustomerInterface
     {
-        if (!$this->findCustomerByEmail($this->loginData['username'])) {
+        $masterRow = $this->findCustomerByEmail($this->loginData['username']);
+        if ($masterRow === null) {
             throw new LocalizedException(__('No active customer found for %1', $this->loginData['username']));
         }
 
@@ -143,7 +144,10 @@ class CreateToken
             ->startEnvironmentEmulation((int)$this->loginData['store_id'], Area::AREA_FRONTEND, true);
 
         $this->accountManagement->authenticate($this->loginData['username'], $this->loginData['password']);
-        $masterCustomer = $this->customerRepository->get($this->loginData['username']);
+        $masterCustomer = $this->customerRepository->get(
+            $this->loginData['username'],
+            $this->getWebsiteIdFromRow($masterRow)
+        );
 
         $this->appEmulation->stopEnvironmentEmulation();
 
@@ -159,8 +163,9 @@ class CreateToken
     {
         $storeId = (int)$this->loginData['store_id'];
 
-        if ($this->findCustomerByEmail($buyerEmail)) {
-            $buyer = $this->customerRepository->get($buyerEmail);
+        $buyerRow = $this->findCustomerByEmail($buyerEmail);
+        if ($buyerRow !== null) {
+            $buyer = $this->customerRepository->get($buyerEmail, $this->getWebsiteIdFromRow($buyerRow));
         } else {
             $buyer = $this->createBuyerCustomer($buyerEmail, $masterCustomer, $storeId);
         }
@@ -209,21 +214,40 @@ class CreateToken
         }
     }
 
-    private function findCustomerByEmail(string $email): bool
+    /**
+     * Find an active customer by email and set its store_id on the login data.
+     *
+     * @param string $email
+     * @return array|null Row with store_id and website_id, or null if not found
+     */
+    private function findCustomerByEmail(string $email): ?array
     {
         $connection = $this->resourceConnection->getConnection();
         $select = $connection->select()
-            ->from($this->resourceConnection->getTableName('customer_entity'), 'store_id')
+            ->from($this->resourceConnection->getTableName('customer_entity'), ['store_id', 'website_id'])
             ->where('email = ?', $email)
             ->where('is_active = 1')
             ->limit(1);
 
-        if ($storeId = $connection->fetchOne($select)) {
-            $this->loginData['store_id'] = (int)$storeId;
-            return true;
+        $row = $connection->fetchRow($select);
+        if (!$row || !$row['store_id']) {
+            return null;
         }
 
-        return false;
+        $this->loginData['store_id'] = (int)$row['store_id'];
+        return $row;
+    }
+
+    /**
+     * Website ID of the found customer row, so the repository looks up the customer
+     * on the correct website when account sharing is set per website.
+     *
+     * @param array $row
+     * @return int|null
+     */
+    private function getWebsiteIdFromRow(array $row): ?int
+    {
+        return $row['website_id'] !== null ? (int)$row['website_id'] : null;
     }
 
     /**

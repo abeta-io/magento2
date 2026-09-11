@@ -117,7 +117,7 @@ class ItemData implements ItemDataInterface
      * @return CustomerInterface
      * @throws LocalizedException
      */
-    private function getCustomer(): CustomerInterface
+    private function getCustomer(StoreInterface $store): CustomerInterface
     {
         $customer = $this->validateAndGetEntity(
             'customer_id',
@@ -128,7 +128,7 @@ class ItemData implements ItemDataInterface
         if (!$customer) {
             $customer = $this->validateAndGetEntity(
                 'email',
-                fn ($email) => $this->customerRepository->get((string) $email)
+                fn ($email) => $this->customerRepository->get((string) $email, (int) $store->getWebsiteId())
             );
         }
 
@@ -249,7 +249,7 @@ class ItemData implements ItemDataInterface
      */
     private function createQuote(StoreInterface $store, array $products): Quote
     {
-        $customer = $this->getCustomer();
+        $customer = $this->getCustomer($store);
 
         $quote = $this->quoteFactory->create()
             ->setStore($store)
