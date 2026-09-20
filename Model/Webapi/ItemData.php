@@ -258,7 +258,16 @@ class ItemData implements ItemDataInterface
         foreach ($products as $productData) {
             $product = $productData['product'];
             $qty = $productData['qty'] ?? 1;
-            $this->addProduct($quote, $product, (int) $qty);
+        
+            try {
+                $this->addProduct($quote, $product, (int) $qty);
+            } catch (LocalizedException $e) {
+                $this->logger->addErrorLog('ItemData Webapi', [
+                    'skipped_sku' => $product->getSku(),
+                    'reason' => $e->getMessage()
+                ]);
+                continue;
+            }
         }
 
         // Collect totals before shipping rates to ensure accurate calculations
