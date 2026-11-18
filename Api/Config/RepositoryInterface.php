@@ -18,6 +18,8 @@ interface RepositoryInterface
     public const XML_PATH_SHIPPING_METHOD = 'abeta_punch_out/settings/shipping_method';
     public const XML_PATH_USE_MODAL = 'abeta_punch_out/settings/use_modal';
     public const XML_PATH_CUSTOM_CSS = 'abeta_punch_out/settings/custom_css';
+    public const XML_PATH_ALLOW_BUYER_LOGIN = 'abeta_punch_out/settings/allow_buyer_login';
+    public const XML_PATH_BUYER_DOMAINS = 'abeta_punch_out/settings/buyer_domains';
     public const XML_PATH_DEBUG = 'abeta_punch_out/debug/enabled';
 
     public const XML_PATH_STORE_COUNTRY_ID = 'general/store_information/country_id';
@@ -82,6 +84,26 @@ interface RepositoryInterface
      * @return bool
      */
     public function useModal(?int $storeId = null): bool;
+
+    /**
+     * Check if a master account may log in as a buyer via buyer_email
+     *
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    public function isBuyerLoginAllowed(?int $storeId = null): bool;
+
+    /**
+     * Get the buyer email domains a master account may use in buyer_email.
+     * Returns an empty array when the master account is not configured.
+     *
+     * @param string $masterEmail
+     * @param int|null $storeId
+     *
+     * @return string[] Lowercase domains, without "@"
+     */
+    public function getAllowedBuyerDomains(string $masterEmail, ?int $storeId = null): array;
 
     /**
      * Check if debug mode is enabled

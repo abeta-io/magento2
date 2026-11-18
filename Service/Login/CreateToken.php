@@ -86,7 +86,7 @@ class CreateToken
      */
     private function validatePostData($postData): void
     {
-        $this->logRepository->addDebugLog("ValidatePostData - Login", $postData);
+        $this->logRepository->addDebugLog("ValidatePostData - Login", $this->maskSensitiveData($postData));
 
         foreach (self::REQUIRED_FIELDS as $requiredField) {
             if (empty($postData[$requiredField])) {
@@ -105,6 +105,30 @@ class CreateToken
         }
 
         $this->loginData['login_only'] = isset($this->loginData['login_only']) && $this->loginData['login_only'];
+    }
+
+    /**
+     * Mask credentials before the post data is written to the debug log.
+     * The password is fully masked; the API key keeps its last 3 characters
+     * so it is still possible to see which key was used.
+     *
+     * @param array $postData
+     * @return array
+     */
+    private function maskSensitiveData(array $postData): array
+    {
+        if (isset($postData['password'])) {
+            $postData['password'] = '***';
+        }
+
+        if (isset($postData['api_key']) && is_string($postData['api_key'])) {
+            $apiKey = $postData['api_key'];
+            $postData['api_key'] = strlen($apiKey) > 6
+                ? str_repeat('*', strlen($apiKey) - 3) . substr($apiKey, -3)
+                : '***';
+        }
+
+        return $postData;
     }
 
     /**
@@ -139,6 +163,7 @@ class CreateToken
         if ($masterRow === null) {
             throw new LocalizedException(__('No active customer found for %1', $this->loginData['username']));
         }
+        $this->loginData['store_id'] = (int)$masterRow['store_id'];
 
         $this->appEmulation
             ->startEnvironmentEmulation((int)$this->loginData['store_id'], Area::AREA_FRONTEND, true);
@@ -156,7 +181,69 @@ class CreateToken
             return $masterCustomer;
         }
 
+        $storeId = (int)$this->loginData['store_id'];
+        if (!$this->configProvider->isBuyerLoginAllowed($storeId)) {
+            $this->logRepository->addDebugLog('Login - buyer_email refused, buyer login disabled', [
+                'master' => $this->loginData['username'],
+                'buyer_email' => $buyerEmail,
+            ]);
+            throw new LocalizedException(__('Buyer login is not enabled for this store'));
+        }
+
+        $this->validateBuyerEmail($buyerEmail, $masterCustomer, $storeId);
+
         return $this->getOrCreateBuyerCustomer($buyerEmail, $masterCustomer);
+    }
+
+    /**
+     * Check that the master account is configured for buyer login and that the
+     * buyer_email domain is one of its allowed domains.
+     *
+     * @param string $buyerEmail
+     * @param CustomerInterface $masterCustomer
+     * @param int $storeId
+     * @return void
+     * @throws LocalizedException
+     */
+    private function validateBuyerEmail(string $buyerEmail, CustomerInterface $masterCustomer, int $storeId): void
+    {
+        $allowedDomains = $this->configProvider->getAllowedBuyerDomains(
+            (string)$masterCustomer->getEmail(),
+            $storeId
+        );
+
+        $reason = null;
+        if (empty($allowedDomains)) {
+            $reason = 'master account is not configured for buyer login';
+        } elseif (!filter_var($buyerEmail, FILTER_VALIDATE_EMAIL)) {
+            $reason = 'buyer_email is not a valid email address';
+        } elseif (!in_array($this->getEmailDomain($buyerEmail), $allowedDomains, true)) {
+            $reason = 'buyer_email domain is not allowed for this master account';
+        }
+
+        if ($reason === null) {
+            return;
+        }
+
+        $this->logRepository->addDebugLog('Login - buyer_email refused, ' . $reason, [
+            'master' => $masterCustomer->getEmail(),
+            'buyer_email' => $buyerEmail,
+            'allowed_domains' => $allowedDomains,
+        ]);
+        throw new LocalizedException(__('This buyer_email is not allowed for this account'));
+    }
+
+    /**
+     * Lowercase domain part of an email address (everything after the last "@").
+     *
+     * @param string $email
+     * @return string
+     */
+    private function getEmailDomain(string $email): string
+    {
+        $position = strrpos($email, '@');
+
+        return $position === false ? '' : strtolower(substr($email, $position + 1));
     }
 
     private function getOrCreateBuyerCustomer(string $buyerEmail, CustomerInterface $masterCustomer): CustomerInterface
@@ -215,7 +302,7 @@ class CreateToken
     }
 
     /**
-     * Find an active customer by email and set its store_id on the login data.
+     * Find an active customer by email.
      *
      * @param string $email
      * @return array|null Row with store_id and website_id, or null if not found
@@ -234,7 +321,6 @@ class CreateToken
             return null;
         }
 
-        $this->loginData['store_id'] = (int)$row['store_id'];
         return $row;
     }
 

@@ -20,5 +20,21 @@
             <label>Custom Css</label>
             <config_path>abeta_punch_out/settings/custom_css</config_path>
         </field>
+        <field id="allow_buyer_login" translate="label comment" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Allow Buyer Login</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>abeta_punch_out/settings/allow_buyer_login</config_path>
+            <comment>Allow a master account to start a PunchOut session as a buyer account by sending buyer_email. Buyer accounts that do not exist yet are created automatically. [Caution, only turn on if you know the implications.]</comment>
+        </field>
+        <field id="buyer_domains" translate="label comment" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Allowed Buyer Domains</label>
+            <frontend_model>Abeta\PunchOut\Block\Adminhtml\System\Config\Form\Field\BuyerDomains</frontend_model>
+            <backend_model>Abeta\PunchOut\Model\Config\Backend\BuyerDomains</backend_model>
+            <config_path>abeta_punch_out/settings/buyer_domains</config_path>
+            <comment>Only the master accounts listed here may use buyer_email, and only for buyer email addresses in their allowed domains (comma separated, e.g. smart.com, smart.nl). Domains must match exactly; subdomains must be added separately.</comment>
+            <depends>
+                <field id="allow_buyer_login">1</field>
+            </depends>
+        </field>
     </group>
 </include>

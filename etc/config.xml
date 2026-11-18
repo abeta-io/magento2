@@ -10,6 +10,7 @@
             <settings>
                 <button_label>PunchOut</button_label>
                 <use_modal>1</use_modal>
+                <allow_buyer_login>0</allow_buyer_login>
             </settings>
             <debug>
                 <enabled>0</enabled>

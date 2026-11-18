@@ -3,7 +3,9 @@
 namespace Abeta\PunchOut\Model\Config;
 
 use Abeta\PunchOut\Api\Config\RepositoryInterface as ConfigRepositoryInterface;
+use Abeta\PunchOut\Model\Config\Backend\BuyerDomains;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Model\ScopeInterface;
 
 /**
@@ -18,14 +20,22 @@ class Repository implements ConfigRepositoryInterface
     private $scopeConfig;
 
     /**
+     * @var Json
+     */
+    private $json;
+
+    /**
      * Repository constructor.
      *
      * @param ScopeConfigInterface $scopeConfig
+     * @param Json $json
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        Json $json
     ) {
         $this->scopeConfig = $scopeConfig;
+        $this->json = $json;
     }
 
     /**
@@ -122,6 +132,48 @@ class Repository implements ConfigRepositoryInterface
     public function useModal(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_USE_MODAL, $storeId);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isBuyerLoginAllowed(?int $storeId = null): bool
+    {
+        return $this->isSetFlag(self::XML_PATH_ALLOW_BUYER_LOGIN, $storeId);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getAllowedBuyerDomains(string $masterEmail, ?int $storeId = null): array
+    {
+        $value = $this->getStoreValue(self::XML_PATH_BUYER_DOMAINS, $storeId);
+        if ($value === '') {
+            return [];
+        }
+
+        try {
+            $rows = $this->json->unserialize($value);
+        } catch (\InvalidArgumentException $exception) {
+            return [];
+        }
+
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $masterEmail = strtolower(trim($masterEmail));
+        $domains = [];
+        foreach ($rows as $row) {
+            if (!is_array($row) || strtolower(trim((string)($row['master_email'] ?? ''))) !== $masterEmail) {
+                continue;
+            }
+            foreach (BuyerDomains::splitDomains((string)($row['allowed_domains'] ?? '')) as $domain) {
+                $domains[$domain] = $domain;
+            }
+        }
+
+        return array_values($domains);
     }
 
     /**
