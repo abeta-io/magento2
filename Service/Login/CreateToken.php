@@ -8,7 +8,6 @@ use Abeta\PunchOut\Api\LoginToken\RepositoryInterface as TokenRepository;
 use Magento\Customer\Api\AccountManagementInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface as CustomerRepository;
 use Magento\Customer\Api\Data\CustomerInterface;
-use Magento\Customer\Api\Data\CustomerInterfaceFactory;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\LocalizedException;
@@ -36,7 +35,6 @@ class CreateToken
     private Random $mathRandom;
     private TokenRepository $tokenRepository;
     private CustomerRepository $customerRepository;
-    private CustomerInterfaceFactory $customerFactory;
     private AccountManagementInterface $accountManagement;
     private Emulation $appEmulation;
     private StoreManagerInterface $storeManager;
@@ -48,7 +46,6 @@ class CreateToken
         TokenRepository $tokenRepository,
         Random $mathRandom,
         CustomerRepository $customerRepository,
-        CustomerInterfaceFactory $customerFactory,
         AccountManagementInterface $accountManagement,
         Emulation $appEmulation,
         StoreManagerInterface $storeManager,
@@ -59,7 +56,6 @@ class CreateToken
         $this->tokenRepository = $tokenRepository;
         $this->mathRandom = $mathRandom;
         $this->customerRepository = $customerRepository;
-        $this->customerFactory = $customerFactory;
         $this->accountManagement = $accountManagement;
         $this->appEmulation = $appEmulation;
         $this->storeManager = $storeManager;
@@ -86,7 +82,7 @@ class CreateToken
      */
     private function validatePostData($postData): void
     {
-        $this->logRepository->addDebugLog("ValidatePostData - Login", $postData);
+        $this->logRepository->addDebugLog("ValidatePostData - Login", $this->maskSensitiveData($postData));
 
         foreach (self::REQUIRED_FIELDS as $requiredField) {
             if (empty($postData[$requiredField])) {
@@ -105,6 +101,30 @@ class CreateToken
         }
 
         $this->loginData['login_only'] = isset($this->loginData['login_only']) && $this->loginData['login_only'];
+    }
+
+    /**
+     * Mask credentials before the post data is written to the debug log.
+     * The password is fully masked; the API key keeps its last 3 characters
+     * so it is still possible to see which key was used.
+     *
+     * @param array $postData
+     * @return array
+     */
+    private function maskSensitiveData(array $postData): array
+    {
+        if (isset($postData['password'])) {
+            $postData['password'] = '***';
+        }
+
+        if (isset($postData['api_key']) && is_string($postData['api_key'])) {
+            $apiKey = $postData['api_key'];
+            $postData['api_key'] = strlen($apiKey) > 6
+                ? str_repeat('*', strlen($apiKey) - 3) . substr($apiKey, -3)
+                : '***';
+        }
+
+        return $postData;
     }
 
     /**
@@ -135,8 +155,8 @@ class CreateToken
      */
     private function getCustomer(): CustomerInterface
     {
-        $masterRow = $this->findCustomerByEmail($this->loginData['username']);
-        if ($masterRow === null) {
+        $customerRow = $this->findCustomerByEmail($this->loginData['username']);
+        if ($customerRow === null) {
             throw new LocalizedException(__('No active customer found for %1', $this->loginData['username']));
         }
 
@@ -144,74 +164,14 @@ class CreateToken
             ->startEnvironmentEmulation((int)$this->loginData['store_id'], Area::AREA_FRONTEND, true);
 
         $this->accountManagement->authenticate($this->loginData['username'], $this->loginData['password']);
-        $masterCustomer = $this->customerRepository->get(
+        $customer = $this->customerRepository->get(
             $this->loginData['username'],
-            $this->getWebsiteIdFromRow($masterRow)
+            $this->getWebsiteIdFromRow($customerRow)
         );
 
         $this->appEmulation->stopEnvironmentEmulation();
 
-        $buyerEmail = $this->loginData['buyer_email'] ?? null;
-        if (empty($buyerEmail)) {
-            return $masterCustomer;
-        }
-
-        return $this->getOrCreateBuyerCustomer($buyerEmail, $masterCustomer);
-    }
-
-    private function getOrCreateBuyerCustomer(string $buyerEmail, CustomerInterface $masterCustomer): CustomerInterface
-    {
-        $storeId = (int)$this->loginData['store_id'];
-
-        $buyerRow = $this->findCustomerByEmail($buyerEmail);
-        if ($buyerRow !== null) {
-            $buyer = $this->customerRepository->get($buyerEmail, $this->getWebsiteIdFromRow($buyerRow));
-        } else {
-            $buyer = $this->createBuyerCustomer($buyerEmail, $masterCustomer, $storeId);
-        }
-
-        $this->syncCustomerData($buyer, $masterCustomer);
-
-        return $buyer;
-    }
-
-    private function createBuyerCustomer(
-        string $email,
-        CustomerInterface $masterCustomer,
-        int $storeId
-    ): CustomerInterface {
-        $store = $this->storeManager->getStore($storeId);
-        $websiteId = (int)$store->getWebsiteId();
-
-        $customer = $this->customerFactory->create();
-        $customer->setEmail($email);
-        $customer->setFirstname($this->loginData['buyer_first_name'] ?? $masterCustomer->getFirstname());
-        $customer->setLastname($this->loginData['buyer_last_name'] ?? $masterCustomer->getLastname());
-        $customer->setStoreId($storeId);
-        $customer->setWebsiteId($websiteId);
-        $customer->setGroupId($masterCustomer->getGroupId());
-        $customer->setTaxvat($masterCustomer->getTaxvat());
-
-        return $this->customerRepository->save($customer);
-    }
-
-    private function syncCustomerData(CustomerInterface $buyer, CustomerInterface $masterCustomer): void
-    {
-        $changed = false;
-
-        if ($buyer->getGroupId() !== $masterCustomer->getGroupId()) {
-            $buyer->setGroupId($masterCustomer->getGroupId());
-            $changed = true;
-        }
-
-        if ($buyer->getTaxvat() !== $masterCustomer->getTaxvat()) {
-            $buyer->setTaxvat($masterCustomer->getTaxvat());
-            $changed = true;
-        }
-
-        if ($changed) {
-            $this->customerRepository->save($buyer);
-        }
+        return $customer;
     }
 
     /**
